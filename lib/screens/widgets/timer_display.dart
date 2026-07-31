@@ -67,7 +67,7 @@ class TimerDisplay extends StatelessWidget {
                 const SizedBox(width: 24),
                 FloatingActionButton(
                   heroTag: 'timer_stop',
-                  onPressed: () => provider.resetTime(),
+                  onPressed: () => provider.resetTimer(),
                   backgroundColor: theme.colorScheme.surface,
                   foregroundColor: theme.colorScheme.onSurface,
                   elevation: 0,

@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:tiktac_app/models/stopwatch_entry.dart';
 import 'package:tiktac_app/services/stopwatch_service.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:tiktac_app/services/foreground_task_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StopwatchProvider with ChangeNotifier {
   final StopwatchService _service;
@@ -43,6 +47,41 @@ class StopwatchProvider with ChangeNotifier {
   // Inicializar
   Future<void> init() async {
     loadEntries();
+    await _checkPendingSessions();
+  }
+
+  Future<void> _checkPendingSessions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pending = prefs.getStringList('pending_sessions') ?? [];
+    if (pending.isNotEmpty) {
+      for (final sessionStr in pending) {
+        final data = jsonDecode(sessionStr);
+        final elapsed = data['timeElapsed'] as int;
+        if (data['isTimer'] == false) { // Es cronómetro
+          await addEntry('Sesión de Cronómetro', 'General', elapsed);
+        } else {
+          await addEntry('Sesión de Temporizador', 'General', elapsed);
+        }
+      }
+      await prefs.setStringList('pending_sessions', []);
+    }
+    
+    // Y recuperamos el estado si el servicio sigue vivo
+    if (await FlutterForegroundTask.isRunningService) {
+      final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
+      if (mode == 'stopwatch') {
+        _isRunning = true;
+        _elapsedTime = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
+        final startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
+        _elapsedTime += (DateTime.now().millisecondsSinceEpoch - startMillis);
+        
+        _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+          _elapsedTime += 10;
+          notifyListeners();
+        });
+        notifyListeners();
+      }
+    }
   }
 
   // Cargar historial
@@ -63,10 +102,24 @@ class StopwatchProvider with ChangeNotifier {
     }
   }
 
-  void startTimer() {
+  Future<void> startTimer() async {
     if (_isRunning) return;
     _isRunning = true;
     notifyListeners();
+
+    await FlutterForegroundTask.saveData(key: 'mode', value: 'stopwatch');
+    await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
+    await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _elapsedTime);
+
+    if (await FlutterForegroundTask.isRunningService) {
+      await FlutterForegroundTask.restartService();
+    } else {
+      await FlutterForegroundTask.startService(
+        notificationTitle: 'Cronómetro',
+        notificationText: formattedTimeShort,
+        callback: startCallback,
+      );
+    }
 
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       _elapsedTime += 10;
@@ -74,17 +127,19 @@ class StopwatchProvider with ChangeNotifier {
     });
   }
 
-  void pauseTimer() {
+  Future<void> pauseTimer() async {
     _timer?.cancel();
     _isRunning = false;
     notifyListeners();
+    await FlutterForegroundTask.stopService();
   }
 
-  void resetTimer() {
+  Future<void> resetTimer() async {
     _timer?.cancel();
     _isRunning = false;
     _elapsedTime = 0;
     notifyListeners();
+    await FlutterForegroundTask.stopService();
   }
 
   // Guardar la actividad completada

@@ -22,6 +22,7 @@ dependencies:
   screenshot: ^3.0.0
   simple_pip_mode: ^1.1.0
   path_provider: ^2.1.6
+  flutter_foreground_task: ^10.0.0
 
 dev_dependencies:
   flutter_test:

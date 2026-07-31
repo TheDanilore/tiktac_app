@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'package:vibration/vibration.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
+import 'package:vibration/vibration.dart';
 
 class TimerProvider extends ChangeNotifier {
-  int _secondsRemaining = 0;
   int _initialSeconds = 0;
+  int _remainingTimeMillis = 0;
+  int _targetTimeMillis = 0;
   Timer? _timer;
   bool _isRunning = false;
 
-  int get secondsRemaining => _secondsRemaining;
+  int get secondsRemaining => (_remainingTimeMillis / 1000).ceil();
   int get initialSeconds => _initialSeconds;
   bool get isRunning => _isRunning;
 
   String get formattedTime {
-    final hours = _secondsRemaining ~/ 3600;
-    final minutes = (_secondsRemaining % 3600) ~/ 60;
-    final seconds = _secondsRemaining % 60;
+    final totalSeconds = (_remainingTimeMillis / 1000).ceil();
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
     
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -27,57 +31,114 @@ class TimerProvider extends ChangeNotifier {
   }
 
   double get progress {
-    if (_initialSeconds == 0) return 0.0;
-    return 1 - (_secondsRemaining / _initialSeconds);
+    if (_targetTimeMillis == 0) return 0.0;
+    return 1 - (_remainingTimeMillis / _targetTimeMillis);
+  }
+
+  Future<void> init(BuildContext context) async {
+    if (await FlutterForegroundTask.isRunningService) {
+      final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
+      if (mode == 'timer') {
+        _isRunning = true;
+        final targetMillis = await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? _targetTimeMillis;
+        _targetTimeMillis = targetMillis;
+        final accumulatedMillis = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
+        final startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
+        
+        final elapsed = accumulatedMillis + (DateTime.now().millisecondsSinceEpoch - startMillis);
+        _remainingTimeMillis = _targetTimeMillis - elapsed;
+        
+        if (_remainingTimeMillis <= 0) {
+          _remainingTimeMillis = 0;
+          _isRunning = false;
+          _onTimerFinished(context);
+        } else {
+          _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+            if (_remainingTimeMillis > 0) {
+              _remainingTimeMillis -= 10;
+              notifyListeners();
+            } else {
+              _onTimerFinished(context);
+            }
+          });
+          notifyListeners();
+        }
+      }
+    }
   }
 
   void addTime(int minutes) {
     if (_isRunning) return;
     _initialSeconds += minutes * 60;
-    _secondsRemaining = _initialSeconds;
+    _targetTimeMillis = _initialSeconds * 1000;
+    _remainingTimeMillis = _targetTimeMillis;
     notifyListeners();
   }
 
-  void resetTime() {
-    stop();
-    _initialSeconds = 0;
-    _secondsRemaining = 0;
+  Future<void> pauseTimer() async {
+    _timer?.cancel();
+    _isRunning = false;
     notifyListeners();
+    await FlutterForegroundTask.stopService();
+  }
+
+  Future<void> resetTimer() async {
+    _timer?.cancel();
+    _isRunning = false;
+    _initialSeconds = 0;
+    _targetTimeMillis = 0;
+    _remainingTimeMillis = 0;
+    notifyListeners();
+    await FlutterForegroundTask.stopService();
   }
 
   void toggle(BuildContext context) {
     if (_isRunning) {
-      stop();
+      pauseTimer();
     } else {
-      if (_secondsRemaining > 0) {
-        start(context);
+      if (_remainingTimeMillis > 0) {
+        startTimer(context);
       }
     }
   }
 
-  void start(BuildContext context) {
-    if (_isRunning || _secondsRemaining <= 0) return;
+  Future<void> startTimer(BuildContext context) async {
+    if (_isRunning || _remainingTimeMillis == 0) return;
     _isRunning = true;
     notifyListeners();
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (_secondsRemaining > 0) {
-        _secondsRemaining--;
+    await FlutterForegroundTask.saveData(key: 'mode', value: 'timer');
+    await FlutterForegroundTask.saveData(key: 'targetMillis', value: _targetTimeMillis);
+    await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
+    await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _targetTimeMillis - _remainingTimeMillis);
+
+    if (await FlutterForegroundTask.isRunningService) {
+      await FlutterForegroundTask.restartService();
+    } else {
+      await FlutterForegroundTask.startService(
+        notificationTitle: 'Temporizador',
+        notificationText: formattedTime,
+        callback: startCallback,
+      );
+    }
+
+    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      if (_remainingTimeMillis > 0) {
+        _remainingTimeMillis -= 10;
         notifyListeners();
       } else {
-        stop();
         _onTimerFinished(context);
       }
     });
   }
 
-  void stop() {
+  Future<void> _onTimerFinished(BuildContext context) async {
     _timer?.cancel();
     _isRunning = false;
     notifyListeners();
-  }
+    
+    await FlutterForegroundTask.stopService();
 
-  Future<void> _onTimerFinished(BuildContext context) async {
     if (!context.mounted) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final stopwatchProvider = Provider.of<StopwatchProvider>(context, listen: false);

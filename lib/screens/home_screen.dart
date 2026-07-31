@@ -33,6 +33,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     });
     
     SimplePip().setAutoPipMode();
+    
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<TimerProvider>(context, listen: false).init(context);
+      }
+    });
   }
 
   @override
