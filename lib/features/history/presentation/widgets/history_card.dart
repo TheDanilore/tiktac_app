@@ -65,12 +65,7 @@ class HistoryCard extends StatelessWidget {
               label: 'Deshacer',
               textColor: theme.colorScheme.primary,
               onPressed: () {
-                cubit.saveActivity(
-                  title: entry.title,
-                  category: entry.category,
-                  notes: entry.notes,
-                  finalElapsedTime: entry.duration,
-                );
+                cubit.restoreEntry(entry);
               },
             ),
           ),
@@ -228,12 +223,7 @@ class HistoryCard extends StatelessWidget {
                     label: 'Deshacer',
                     textColor: Theme.of(context).colorScheme.primary,
                     onPressed: () {
-                      cubit.saveActivity(
-                        title: entry.title,
-                        category: entry.category,
-                        notes: entry.notes,
-                        finalElapsedTime: entry.duration,
-                      );
+                      cubit.restoreEntry(entry);
                     },
                   ),
                 ),

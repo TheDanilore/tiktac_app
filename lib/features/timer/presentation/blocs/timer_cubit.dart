@@ -8,6 +8,7 @@ import 'package:simple_pip_mode/simple_pip.dart';
 
 import 'package:tiktac_app/core/services/hardware_service.dart';
 import 'package:tiktac_app/core/services/foreground_task_handler.dart';
+import 'package:tiktac_app/features/stopwatch/domain/repositories/stopwatch_repository.dart';
 import 'package:tiktac_app/features/timer/domain/repositories/timer_repository.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
@@ -15,12 +16,13 @@ import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 class TimerCubit extends Cubit<TimerState> {
   final HardwareService _hardware;
   final TimerRepository _repository;
+  final StopwatchRepository _stopwatchRepository;
 
   Timer? _ticker;
   int _targetTimeMillis = 0;
   int _remainingTimeMillis = 0;
 
-  TimerCubit(this._hardware, this._repository) : super(const TimerInitial(0, 0)) {
+  TimerCubit(this._hardware, this._repository, this._stopwatchRepository) : super(const TimerInitial(0, 0)) {
     _init();
   }
 
@@ -50,7 +52,7 @@ class TimerCubit extends Cubit<TimerState> {
         }
       }
       
-      emit(TimerInitial(0, lastSelectedSeconds));
+      _updateInitial(lastSelectedSeconds);
     } catch (e, stack) {
       developer.log("Error initializing TimerCubit", error: e, stackTrace: stack);
     }
@@ -172,6 +174,17 @@ class TimerCubit extends Cubit<TimerState> {
     _ticker?.cancel();
     emit(TimerFinished(initialSeconds));
     SimplePip().setAutoPipMode(autoEnter: false);
+
+    try {
+      await _stopwatchRepository.saveEntry(
+        title: 'Temporizador',
+        duration: initialSeconds * 1000,
+        category: 'General',
+        notes: '',
+      );
+    } catch (e, s) {
+      developer.log('Error al guardar historial del temporizador', error: e, stackTrace: s);
+    }
 
     final isServiceRunning = await FlutterForegroundTask.isRunningService;
     if (!isServiceRunning && !kIsWeb) {

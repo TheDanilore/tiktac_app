@@ -67,6 +67,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i816.TimerCubit>(() => _i816.TimerCubit(
           gh<_i616.HardwareService>(),
           gh<_i835.TimerRepository>(),
+          gh<_i977.StopwatchRepository>(),
         ));
     return this;
   }

@@ -199,12 +199,26 @@ class StopwatchCubit extends Cubit<StopwatchState> {
   }
 
   Future<void> deleteEntry(dynamic key) async {
+    // Optimistic Update: Actualizamos la UI instantáneamente
+    final updatedEntries = state.entries.where((e) => e.id != key).toList();
+    final updatedFiltered = state.filteredEntries.where((e) => e.id != key).toList();
+    emit(state.copyWith(entries: updatedEntries, filteredEntries: updatedFiltered));
     try {
       await _repository.deleteEntry(key);
-      loadEntries();
     } catch (e, s) {
       developer.log('Error deleting entry', error: e, stackTrace: s);
+      loadEntries(); // Revertir en caso de error
       emit(state.copyWith(errorMessage: 'No se pudo eliminar la entrada.'));
+    }
+  }
+
+  Future<void> restoreEntry(StopwatchEntry entry) async {
+    try {
+      await _repository.restoreEntry(entry);
+      loadEntries();
+    } catch (e, s) {
+      developer.log('Error restoring entry', error: e, stackTrace: s);
+      emit(state.copyWith(errorMessage: 'No se pudo restaurar la entrada.'));
     }
   }
 

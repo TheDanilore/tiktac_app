@@ -66,14 +66,39 @@ class _HistoryViewState extends State<HistoryView> {
       );
 
       if (result != null && result.files.single.path != null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ),
+                  SizedBox(width: 16),
+                  Text('Importando historial...'),
+                ],
+              ),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+        
+        await Future.delayed(const Duration(milliseconds: 300)); // Renderizar snackbar
+
         final file = File(result.files.single.path!);
         final contents = await file.readAsString();
         final count = await cubit.importCSVData(contents);
         
         if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$count registros importados')),
+            SnackBar(
+              content: Text('✅ $count registros importados correctamente'),
+              backgroundColor: Colors.green,
+            ),
           );
+          cubit.loadEntries();
         }
       }
     } catch (e, stackTrace) {
@@ -246,8 +271,12 @@ class _HistoryViewState extends State<HistoryView> {
             : state.entries;
         final isSearching = state.filterQuery.isNotEmpty || _searchController.text.isNotEmpty;
 
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        return RefreshIndicator(
+          onRefresh: () async {
+            cubit.loadEntries();
+          },
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           slivers: [
             // Header
             SliverToBoxAdapter(
@@ -381,6 +410,7 @@ class _HistoryViewState extends State<HistoryView> {
                 ),
               ),
           ],
+        ),
         );
       },
     );
