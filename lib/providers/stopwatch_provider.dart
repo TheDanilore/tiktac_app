@@ -118,6 +118,12 @@ class StopwatchProvider with ChangeNotifier {
     loadEntries();
   }
 
+  // Eliminar todo el historial
+  Future<void> clearHistory() async {
+    await _service.clearAll();
+    loadEntries();
+  }
+
   // Buscar
   void search(String query) {
     _filterQuery = query;

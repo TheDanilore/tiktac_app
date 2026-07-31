@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
 import 'package:tiktac_app/screens/home_screen.dart';
 import 'package:tiktac_app/services/stopwatch_service.dart';
+import 'package:tiktac_app/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,30 +31,9 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Cronómetro',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        useMaterial3: true,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.deepPurple.shade600,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
-        ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: Colors.deepPurple.shade600,
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple.shade600,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-        ),
-      ),
+      themeMode: ThemeMode.system,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       home: const HomeScreen(),
     );
   }

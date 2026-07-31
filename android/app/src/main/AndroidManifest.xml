@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permiso para vibración -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Permisos para leer y escribir archivos (historial, capturas, etc.) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:label="tiktac_app"
         android:name="${applicationName}"

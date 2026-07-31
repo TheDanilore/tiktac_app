@@ -7,58 +7,57 @@ class StopwatchDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Consumer<StopwatchProvider>(
       builder: (context, provider, child) {
+        final timeParts = provider.formattedTime.split('.');
+        final mainTime = timeParts[0]; // e.g., 00:00
+        final milliseconds = timeParts.length > 1 ? '.${timeParts[1]}' : '';
+
         return Column(
           children: [
-            Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.95),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 8,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  mainTime,
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontFamily: 'monospace',
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      provider.formattedTime,
-                      style: TextStyle(
-                        fontSize: 72,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade600,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      provider.isRunning ? '▶ Corriendo' : '⏸ Pausado',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: provider.isRunning
-                            ? Colors.green.shade600
-                            : Colors.red.shade600,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                Text(
+                  milliseconds,
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    fontFamily: 'monospace',
+                  ),
                 ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: provider.isRunning ? theme.colorScheme.secondary : theme.colorScheme.onSurfaceVariant,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  provider.isRunning ? 'EN PROGRESO' : (provider.elapsedTime > 0 ? 'PAUSADO' : 'LISTO PARA INICIAR'),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: provider.isRunning
+                        ? theme.colorScheme.secondary
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ],
         );

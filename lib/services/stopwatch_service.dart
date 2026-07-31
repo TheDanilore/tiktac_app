@@ -55,6 +55,11 @@ class StopwatchService {
     await _box.deleteAll(keys);
   }
 
+  // Eliminar todos los registros
+  Future<void> clearAll() async {
+    await _box.clear();
+  }
+
   // Obtener estadísticas
   Map<String, dynamic> getStats() {
     final entries = _box.values.toList();
