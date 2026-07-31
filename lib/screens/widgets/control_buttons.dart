@@ -98,59 +98,9 @@ class ControlButtons extends StatelessWidget {
                 ),
                 child: const Text('Reiniciar cronómetro'),
               ),
-            const SizedBox(height: 24),
-            // Shortcut hints
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ShortcutHint(keyText: 'Espacio', label: 'Iniciar/Pausar'),
-                const SizedBox(width: 16),
-                _ShortcutHint(keyText: 'G', label: 'Guardar'),
-                const SizedBox(width: 16),
-                _ShortcutHint(keyText: 'R', label: 'Reiniciar'),
-              ],
-            ),
           ],
         );
       },
-    );
-  }
-}
-
-class _ShortcutHint extends StatelessWidget {
-  final String keyText;
-  final String label;
-
-  const _ShortcutHint({required this.keyText, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            keyText,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade400,
-              fontFamily: 'monospace',
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade500,
-          ),
-        ),
-      ],
     );
   }
 }

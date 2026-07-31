@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/providers/timer_provider.dart';
+import 'package:tiktac_app/screens/widgets/save_activity_modal.dart';
 import 'package:tiktac_app/screens/widgets/stopwatch_display.dart';
 import 'package:tiktac_app/screens/widgets/control_buttons.dart';
-import 'package:tiktac_app/screens/widgets/save_activity_modal.dart';
+import 'package:tiktac_app/screens/settings_screen.dart';
+import 'package:tiktac_app/screens/widgets/timer_display.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:simple_pip_mode/simple_pip.dart';
+import 'package:simple_pip_mode/pip_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,10 +27,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
+    
+    SimplePip().setAutoPipMode();
   }
 
   @override
@@ -33,9 +43,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return PipWidget(
+      pipBuilder: (context) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: _tabController.index == 1
+                ? Consumer<TimerProvider>(
+                    builder: (context, timer, _) => Text(
+                      timer.formattedTime,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'monospace'),
+                    ),
+                  )
+                : Consumer<StopwatchProvider>(
+                    builder: (context, stopwatch, _) => Text(
+                      stopwatch.formattedTime,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'monospace'),
+                    ),
+                  ),
+          ),
+        );
+      },
+      builder: (context) {
+        return Scaffold(
+          body: SafeArea(
+            child: LayoutBuilder(
           builder: (context, constraints) {
             final isTablet = constraints.maxWidth >= 800;
 
@@ -80,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     physics: const NeverScrollableScrollPhysics(),
                     children: const [
                       StopwatchView(),
+                      TimerView(),
                       HistoryView(),
                     ],
                   ),
@@ -90,6 +123,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
     );
+  },
+);
   }
 
   Widget _buildHeader(BuildContext context, {required bool isTablet}) {
@@ -117,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Row(
                       children: [
                         Text(
-                          'Cronómetro & Historial',
+                          'TikTac',
                           style: theme.textTheme.titleLarge,
                         ),
                         const SizedBox(width: 8),
@@ -132,11 +167,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ],
                     ),
                     Text(
-                      'Mide tu tiempo y documenta en qué te demoras',
+                      'Tiempo bajo control',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings),
+                color: theme.colorScheme.onSurfaceVariant,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
               ),
             ],
           ),
@@ -159,14 +204,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                   Expanded(
+                    child: _CustomTab(
+                      icon: Icons.hourglass_bottom,
+                      text: 'Timer',
+                      isSelected: _tabController.index == 1,
+                      onTap: () => _tabController.animateTo(1),
+                    ),
+                  ),
+                  Expanded(
                     child: Consumer<StopwatchProvider>(
                       builder: (context, provider, child) {
                         return _CustomTab(
                           icon: Icons.history,
                           text: 'Historial',
                           badge: provider.entries.length.toString(),
-                          isSelected: _tabController.index == 1,
-                          onTap: () => _tabController.animateTo(1),
+                          isSelected: _tabController.index == 2,
+                          onTap: () => _tabController.animateTo(2),
                         );
                       },
                     ),
@@ -268,6 +321,19 @@ class StopwatchView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class TimerView extends StatelessWidget {
+  const TimerView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        child: const TimerDisplay(),
       ),
     );
   }
@@ -503,8 +569,102 @@ class _HistoryCard extends StatelessWidget {
               color: theme.colorScheme.onSurface,
             ),
           ),
+          onTap: () {
+            _showShareDialog(context, entry);
+          },
         ),
       ),
+    );
+  }
+
+  void _showShareDialog(BuildContext context, dynamic entry) {
+    final theme = Theme.of(context);
+    final ScreenshotController screenshotController = ScreenshotController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          contentPadding: const EdgeInsets.all(0),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Screenshot(
+                controller: screenshotController,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.timer, color: theme.colorScheme.primary, size: 48),
+                      const SizedBox(height: 16),
+                      Text(
+                        entry.formattedDuration,
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        entry.title,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${entry.category} • ${entry.createdAt.toString().split('.')[0]}',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    label: const Text('Cerrar'),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      try {
+                        final directory = await getApplicationDocumentsDirectory();
+                        final path = '${directory.path}/screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+                        final image = await screenshotController.capture();
+                        if (image != null) {
+                          final file = File(path);
+                          await file.writeAsBytes(image);
+                          await SharePlus.instance.share(
+                            ShareParams(
+                              files: [XFile(path)],
+                              text: '¡Mira mi tiempo en TikTac!',
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        debugPrint('Error sharing: $e');
+                      }
+                    },
+                    icon: const Icon(Icons.share),
+                    label: const Text('Compartir'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 }

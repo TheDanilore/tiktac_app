@@ -106,6 +106,17 @@ class StopwatchProvider with ChangeNotifier {
     loadEntries();
   }
 
+  // Añadir una entrada directamente (para el Temporizador)
+  Future<void> addEntry(String title, String category, int duration) async {
+    await _service.saveEntry(
+      title: title,
+      duration: duration,
+      category: category,
+      notes: '',
+    );
+    loadEntries();
+  }
+
   // Actualizar una entrada
   Future<void> updateEntry(StopwatchEntry entry) async {
     await _service.updateEntry(entry);
