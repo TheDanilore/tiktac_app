@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 
 import 'package:tiktac_app/core/services/hardware_service.dart';
+import 'package:tiktac_app/core/services/foreground_task_handler.dart';
 import 'package:tiktac_app/features/timer/domain/repositories/timer_repository.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
@@ -113,6 +114,7 @@ class TimerCubit extends Cubit<TimerState> {
         await FlutterForegroundTask.startService(
           notificationTitle: 'Temporizador activo',
           notificationText: 'Tiempo corriendo...',
+          callback: startCallback,
         );
       }
     } catch (e, stack) {
