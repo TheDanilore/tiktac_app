@@ -8,7 +8,6 @@ import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
 import 'package:vibration/vibration.dart';
 
 class TimerProvider extends ChangeNotifier {
@@ -66,7 +65,7 @@ class TimerProvider extends ChangeNotifier {
           _remainingTimeMillis = 0;
           _isRunning = false;
           _isAlarmRinging = true; // Timer finished in background
-          if (context.mounted) _onTimerFinished(context);
+          _onTimerFinished();
         } else {
           final endTime = DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
           _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
@@ -76,7 +75,7 @@ class TimerProvider extends ChangeNotifier {
               notifyListeners();
             } else {
               _remainingTimeMillis = 0;
-              _onTimerFinished(context);
+              _onTimerFinished();
             }
           });
           notifyListeners();
@@ -150,7 +149,7 @@ class TimerProvider extends ChangeNotifier {
         notifyListeners();
       } else {
         _remainingTimeMillis = 0;
-        _onTimerFinished(context);
+        _onTimerFinished();
       }
     });
     
@@ -187,37 +186,35 @@ class TimerProvider extends ChangeNotifier {
 
   bool get isAlarmRinging => _isAlarmRinging;
 
-  Future<void> _onTimerFinished(BuildContext context) async {
+  Future<void> _onTimerFinished() async {
     _timer?.cancel();
     _isRunning = false;
-    
-    await FlutterForegroundTask.stopService();
-    SimplePip().setAutoPipMode(autoEnter: false);
-
-    if (!context.mounted) return;
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final stopwatchProvider = Provider.of<StopwatchProvider>(context, listen: false);
-
     _isAlarmRinging = true;
+    
+    SimplePip().setAutoPipMode(autoEnter: false);
     notifyListeners();
 
-    if (settings.isSoundEnabled && !kIsWeb) {
-      FlutterRingtonePlayer().playAlarm(looping: true);
-    }
-
-    if (settings.isVibrationEnabled && !kIsWeb) {
-      _vibrationTimer?.cancel();
-      _vibrationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-        if (_isAlarmRinging) {
-          Vibration.vibrate(duration: 1000, amplitude: 255);
-        } else {
-          timer.cancel();
-        }
-      });
+    final isServiceRunning = await FlutterForegroundTask.isRunningService;
+    if (!isServiceRunning && !kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final isSoundEnabled = prefs.getBool('sound_enabled') ?? true;
+      final isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+      
+      if (isSoundEnabled) {
+        FlutterRingtonePlayer().playAlarm(looping: true);
+      }
+      if (isVibrationEnabled) {
+        _vibrationTimer?.cancel();
+        _vibrationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+          if (_isAlarmRinging) {
+            Vibration.vibrate(duration: 1000, amplitude: 255);
+          } else {
+            timer.cancel();
+          }
+        });
+      }
     }
     
-    // Auto save the session
-    stopwatchProvider.addEntry('Temporizador completado', 'Focus', _initialSeconds * 1000);
     _initialSeconds = 0;
     notifyListeners();
   }
@@ -230,12 +227,14 @@ class TimerProvider extends ChangeNotifier {
       Vibration.cancel();
     }
     SimplePip().setAutoPipMode(autoEnter: false);
+    FlutterForegroundTask.stopService();
     notifyListeners();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _vibrationTimer?.cancel();
     super.dispose();
   }
 }

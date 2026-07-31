@@ -24,9 +24,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {});
-    });
     
     Future.microtask(() {
       if (mounted) {
@@ -287,45 +284,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           if (!isTablet) ...[
             const SizedBox(height: 24),
-            Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.colorScheme.outline),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _CustomTab(
-                      icon: Icons.timer,
-                      text: 'Cronómetro',
-                      isSelected: _tabController.index == 0,
-                      onTap: () => _tabController.animateTo(0),
-                    ),
+            AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: theme.colorScheme.outline),
                   ),
-                  Expanded(
-                    child: _CustomTab(
-                      icon: Icons.hourglass_bottom,
-                      text: 'Timer',
-                      isSelected: _tabController.index == 1,
-                      onTap: () => _tabController.animateTo(1),
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _CustomTab(
+                          icon: Icons.timer,
+                          text: 'Cronómetro',
+                          isSelected: _tabController.index == 0,
+                          onTap: () => _tabController.animateTo(0),
+                        ),
+                      ),
+                      Expanded(
+                        child: _CustomTab(
+                          icon: Icons.hourglass_bottom,
+                          text: 'Timer',
+                          isSelected: _tabController.index == 1,
+                          onTap: () => _tabController.animateTo(1),
+                        ),
+                      ),
+                      Expanded(
+                        child: Consumer<StopwatchProvider>(
+                          builder: (context, provider, child) {
+                            return _CustomTab(
+                              icon: Icons.history,
+                              text: 'Historial',
+                              badge: provider.entries.length.toString(),
+                              isSelected: _tabController.index == 2,
+                              onTap: () => _tabController.animateTo(2),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: Consumer<StopwatchProvider>(
-                      builder: (context, provider, child) {
-                        return _CustomTab(
-                          icon: Icons.history,
-                          text: 'Historial',
-                          badge: provider.entries.length.toString(),
-                          isSelected: _tabController.index == 2,
-                          onTap: () => _tabController.animateTo(2),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                );
+              }
             ),
           ]
         ],
