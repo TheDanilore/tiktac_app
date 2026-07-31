@@ -1,0 +1,210 @@
+import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter/foundation.dart';
+import 'package:tiktac_app/blocs/timer/timer_state.dart';
+import 'package:tiktac_app/services/hardware_service.dart';
+import 'package:tiktac_app/services/logger_service.dart';
+import 'package:tiktac_app/core/di/service_locator.dart';
+import 'package:simple_pip_mode/simple_pip.dart';
+
+class TimerCubit extends Cubit<TimerState> {
+  final LoggerService _logger = getIt<LoggerService>();
+  final HardwareService _hardware = getIt<HardwareService>();
+
+  Timer? _ticker;
+  int _targetTimeMillis = 0;
+  int _remainingTimeMillis = 0;
+
+  TimerCubit() : super(const TimerInitial(0, 0)) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastSelectedSeconds = prefs.getInt('lastSelectedSeconds') ?? 0;
+      
+      if (await FlutterForegroundTask.isRunningService) {
+        final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
+        if (mode == 'timer') {
+          _targetTimeMillis = await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? 0;
+          final accumulatedMillis = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
+          final startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
+          
+          final elapsed = accumulatedMillis + (DateTime.now().millisecondsSinceEpoch - startMillis);
+          _remainingTimeMillis = _targetTimeMillis - elapsed;
+
+          final initialSeconds = _targetTimeMillis ~/ 1000;
+          
+          if (_remainingTimeMillis <= 0) {
+            _remainingTimeMillis = 0;
+            emit(TimerFinished(initialSeconds));
+          } else {
+            _startTicker(initialSeconds);
+          }
+          return;
+        }
+      }
+      
+      emit(TimerInitial(0, lastSelectedSeconds));
+    } catch (e, stack) {
+      _logger.e("Error initializing TimerCubit", e, stack);
+    }
+  }
+
+  void addTime(int minutes) {
+    if (state is TimerRunning) return;
+    
+    final maxSeconds = 86399; // 23:59:59
+    int newInitial = state.initialSeconds + (minutes * 60);
+    if (newInitial > maxSeconds) newInitial = maxSeconds;
+    
+    _updateInitial(newInitial);
+  }
+
+  void setTime(int seconds) {
+    if (state is TimerRunning) return;
+    
+    final maxSeconds = 86399; // 23:59:59
+    int newInitial = seconds > maxSeconds ? maxSeconds : seconds;
+    
+    _updateInitial(newInitial);
+  }
+
+  void _updateInitial(int seconds) {
+    _targetTimeMillis = seconds * 1000;
+    _remainingTimeMillis = _targetTimeMillis;
+    if (seconds > 0) {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setInt('lastSelectedSeconds', seconds);
+      });
+    }
+    emit(TimerInitial(seconds, seconds));
+  }
+
+  Future<void> toggle() async {
+    if (state is TimerRunning) {
+      await pauseTimer();
+    } else {
+      if (_remainingTimeMillis > 0) {
+        await startTimer();
+      }
+    }
+  }
+
+  Future<void> startTimer() async {
+    if (state is TimerRunning || _remainingTimeMillis == 0) return;
+    
+    final initialSeconds = state.initialSeconds;
+    _startTicker(initialSeconds);
+
+    try {
+      await FlutterForegroundTask.saveData(key: 'mode', value: 'timer');
+      await FlutterForegroundTask.saveData(key: 'targetMillis', value: _targetTimeMillis);
+      await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
+      await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _targetTimeMillis - _remainingTimeMillis);
+
+      if (await FlutterForegroundTask.isRunningService) {
+        await FlutterForegroundTask.restartService();
+      } else {
+        await FlutterForegroundTask.startService(
+          notificationTitle: 'Temporizador activo',
+          notificationText: 'Tiempo corriendo...',
+        );
+      }
+      
+      // Auto PiP if enabled is handled from UI or settings
+    } catch (e, stack) {
+      _logger.e("Error starting foreground task", e, stack);
+    }
+  }
+
+  void _startTicker(int initialSeconds) {
+    _ticker?.cancel();
+    final endTime = DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
+    
+    emit(TimerRunning(initialSeconds, (_remainingTimeMillis / 1000).ceil()));
+    
+    // Ticker optimizations: running every 50ms is smoother for UI if we need it, 
+    // but 1 second is enough for just seconds.
+    // We will use 50ms for smooth progress bar, but notify UI based on actual seconds remaining
+    _ticker = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (endTime > now) {
+        _remainingTimeMillis = endTime - now;
+        emit(TimerRunning(initialSeconds, (_remainingTimeMillis / 1000).ceil()));
+      } else {
+        _remainingTimeMillis = 0;
+        _onTimerFinished(initialSeconds);
+      }
+    });
+  }
+
+  Future<void> pauseTimer() async {
+    _ticker?.cancel();
+    emit(TimerPaused(state.initialSeconds, (_remainingTimeMillis / 1000).ceil()));
+    try {
+      await FlutterForegroundTask.stopService();
+      SimplePip().setAutoPipMode(autoEnter: false);
+    } catch (e, stack) {
+      _logger.e("Error pausing timer", e, stack);
+    }
+  }
+
+  Future<void> resetTimer() async {
+    _ticker?.cancel();
+    _targetTimeMillis = state.initialSeconds * 1000;
+    _remainingTimeMillis = _targetTimeMillis;
+    
+    emit(TimerInitial(state.initialSeconds, state.initialSeconds));
+    try {
+      await FlutterForegroundTask.stopService();
+      SimplePip().setAutoPipMode(autoEnter: false);
+    } catch (e, stack) {
+      _logger.e("Error resetting timer", e, stack);
+    }
+  }
+
+  Future<void> _onTimerFinished(int initialSeconds) async {
+    _ticker?.cancel();
+    emit(TimerFinished(initialSeconds));
+    SimplePip().setAutoPipMode(autoEnter: false);
+
+    final isServiceRunning = await FlutterForegroundTask.isRunningService;
+    if (!isServiceRunning && !kIsWeb) {
+      await _hardware.playAlarm();
+    }
+  }
+
+  Future<void> stopAlarm() async {
+    await _hardware.stopAlarm();
+    await FlutterForegroundTask.stopService();
+    SimplePip().setAutoPipMode(autoEnter: false);
+    emit(TimerInitial(0, state.initialSeconds));
+  }
+  
+  double get progress {
+    if (_targetTimeMillis == 0) return 0.0;
+    return 1 - (_remainingTimeMillis / _targetTimeMillis);
+  }
+
+  String get formattedTime {
+    final totalSeconds = (_remainingTimeMillis / 1000).ceil();
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Future<void> close() {
+    _ticker?.cancel();
+    return super.close();
+  }
+}

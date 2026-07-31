@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
-import 'package:tiktac_app/providers/timer_provider.dart';
+import 'package:tiktac_app/blocs/timer/timer_cubit.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/screens/home_screen.dart';
 import 'package:tiktac_app/services/stopwatch_service.dart';
 import 'package:tiktac_app/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:tiktac_app/core/di/service_locator.dart';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
@@ -40,6 +42,9 @@ void main() async {
   
   await Hive.initFlutter();
 
+  // Inicializar inyección de dependencias
+  setupLocator();
+
   final service = StopwatchService();
   await service.init();
 
@@ -53,7 +58,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => StopwatchProvider(service)..init(),
         ),
-        ChangeNotifierProvider(create: (_) => TimerProvider()),
+        BlocProvider<TimerCubit>(create: (_) => TimerCubit()),
       ],
       child: const MainApp(),
     ),

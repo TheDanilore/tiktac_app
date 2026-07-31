@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
-import 'package:tiktac_app/providers/timer_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tiktac_app/blocs/timer/timer_cubit.dart';
+import 'package:tiktac_app/blocs/timer/timer_state.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/screens/settings_screen.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
@@ -27,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     
     Future.microtask(() {
       if (mounted) {
-        Provider.of<TimerProvider>(context, listen: false).init();
         _checkPermissions();
       }
     });
@@ -99,9 +100,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
             child: _tabController.index == 1
-                ? Consumer<TimerProvider>(
-                    builder: (context, timer, _) {
-                      final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
+                ? BlocBuilder<TimerCubit, TimerState>(
+                    builder: (context, state) {
+                      final cubit = context.read<TimerCubit>();
+                      final progress = state.initialSeconds > 0 ? cubit.progress : 1.0;
                       return Stack(
                         children: [
                           Align(
@@ -124,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      timer.formattedTime,
+                                      cubit.formattedTime,
                                       style: const TextStyle(
                                         fontSize: 32,
                                         fontWeight: FontWeight.bold,
