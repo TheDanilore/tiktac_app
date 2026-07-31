@@ -14,20 +14,22 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Ajustes'),
       ),
-      body: Consumer<SettingsProvider>(
-        builder: (context, settings, _) {
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _SectionTitle(title: 'Apariencia'),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outline),
-                ),
-                child: RadioGroup<ThemeMode>(
-                  groupValue: settings.themeMode,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const _SectionTitle(title: 'Apariencia'),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: Selector<SettingsProvider, ThemeMode>(
+              selector: (context, settings) => settings.themeMode,
+              builder: (context, themeMode, _) {
+                final settings = Provider.of<SettingsProvider>(context, listen: false);
+                return RadioGroup<ThemeMode>(
+                  groupValue: themeMode,
                   onChanged: (mode) => settings.setThemeMode(mode!),
                   child: Column(
                     children: [
@@ -47,59 +49,89 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _SectionTitle(title: 'Comportamiento'),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outline),
-                ),
-                child: Column(
-                  children: [
-                    SwitchListTile(
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          const _SectionTitle(title: 'Comportamiento'),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: Column(
+              children: [
+                Selector<SettingsProvider, bool>(
+                  selector: (context, settings) => settings.isVibrationEnabled,
+                  builder: (context, isVibrationEnabled, _) {
+                    return SwitchListTile(
                       title: const Text('Vibración Intensa'),
                       subtitle: const Text('Al terminar el temporizador o acciones clave'),
-                      value: settings.isVibrationEnabled,
-                      onChanged: (val) => settings.setVibrationEnabled(val),
-                    ),
-                    const Divider(height: 1),
-                    SwitchListTile(
+                      value: isVibrationEnabled,
+                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setVibrationEnabled(val),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                Selector<SettingsProvider, bool>(
+                  selector: (context, settings) => settings.isSoundEnabled,
+                  builder: (context, isSoundEnabled, _) {
+                    return SwitchListTile(
                       title: const Text('Sonido'),
                       subtitle: const Text('Reproducir alarma al finalizar el temporizador'),
-                      value: settings.isSoundEnabled,
-                      onChanged: (val) => settings.setSoundEnabled(val),
-                    ),
-                    const Divider(height: 1),
-                    SwitchListTile(
+                      value: isSoundEnabled,
+                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setSoundEnabled(val),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                Selector<SettingsProvider, bool>(
+                  selector: (context, settings) => settings.isPipEnabled,
+                  builder: (context, isPipEnabled, _) {
+                    return SwitchListTile(
                       title: const Text('Modo Encogido (PiP)'),
                       subtitle: const Text('Mantener tiempo en pantalla al minimizar la app'),
-                      value: settings.isPipEnabled,
-                      onChanged: (val) => settings.setPipEnabled(val),
-                    ),
-                  ],
+                      value: isPipEnabled,
+                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setPipEnabled(val),
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 24),
-              _SectionTitle(title: 'Permisos'),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outline),
-                ),
-                child: ListTile(
-                  title: const Text('Notificaciones'),
-                  subtitle: const Text('Configurar permiso en los ajustes del sistema'),
-                  trailing: const Icon(Icons.open_in_new),
-                  onTap: () => openAppSettings(),
-                ),
-              ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const _SectionTitle(title: 'Permisos'),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: ListTile(
+              title: const Text('Notificaciones'),
+              subtitle: const Text('Configurar permiso en los ajustes del sistema'),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () async {
+                try {
+                  final opened = await openAppSettings();
+                  if (!opened && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No se pudieron abrir los ajustes del sistema')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error al acceder a los ajustes')),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
