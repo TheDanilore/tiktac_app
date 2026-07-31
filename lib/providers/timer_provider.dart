@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
@@ -10,13 +11,29 @@ import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:vibration/vibration.dart';
 
-class TimerProvider extends ChangeNotifier {
+class TimerProvider extends ChangeNotifier with WidgetsBindingObserver {
   int _initialSeconds = 0;
   int _lastSelectedSeconds = 0;
   int _remainingTimeMillis = 0;
   int _targetTimeMillis = 0;
   Timer? _timer;
   bool _isRunning = false;
+
+  TimerProvider() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _timer?.cancel();
+      _timer = null;
+    } else if (state == AppLifecycleState.resumed) {
+      if (_isRunning) {
+        init();
+      }
+    }
+  }
 
   int get secondsRemaining => (_remainingTimeMillis / 1000).ceil();
   int get initialSeconds => _initialSeconds;
@@ -40,7 +57,7 @@ class TimerProvider extends ChangeNotifier {
     return 1 - (_remainingTimeMillis / _targetTimeMillis);
   }
 
-  Future<void> init(BuildContext context) async {
+  Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _lastSelectedSeconds = prefs.getInt('lastSelectedSeconds') ?? 0;
     if (_lastSelectedSeconds > 0 && _initialSeconds == 0) {
@@ -86,7 +103,10 @@ class TimerProvider extends ChangeNotifier {
 
   void addTime(int minutes) {
     if (_isRunning) return;
+    final maxSeconds = 86399; // 23:59:59
     _initialSeconds += minutes * 60;
+    if (_initialSeconds > maxSeconds) _initialSeconds = maxSeconds;
+    
     _targetTimeMillis = _initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
     if (_initialSeconds > 0) {
@@ -98,7 +118,8 @@ class TimerProvider extends ChangeNotifier {
 
   void setTime(int seconds) {
     if (_isRunning) return;
-    _initialSeconds = seconds;
+    final maxSeconds = 86399; // 23:59:59
+    _initialSeconds = seconds > maxSeconds ? maxSeconds : seconds;
     if (seconds > 0) {
       _lastSelectedSeconds = seconds;
       SharedPreferences.getInstance().then((prefs) => prefs.setInt('lastSelectedSeconds', seconds));
@@ -197,6 +218,17 @@ class TimerProvider extends ChangeNotifier {
     final isServiceRunning = await FlutterForegroundTask.isRunningService;
     if (!isServiceRunning && !kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
+      
+      // Save pending session since background task won't do it
+      final sessionData = {
+        'timeElapsed': _targetTimeMillis,
+        'isTimer': true,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      final pendingSessionsStr = prefs.getStringList('pending_sessions') ?? [];
+      pendingSessionsStr.add(jsonEncode(sessionData));
+      await prefs.setStringList('pending_sessions', pendingSessionsStr);
+
       final isSoundEnabled = prefs.getBool('sound_enabled') ?? true;
       final isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
       
@@ -233,6 +265,7 @@ class TimerProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _vibrationTimer?.cancel();
     super.dispose();

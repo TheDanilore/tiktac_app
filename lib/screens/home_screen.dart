@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     
     Future.microtask(() {
       if (mounted) {
-        Provider.of<TimerProvider>(context, listen: false).init(context);
+        Provider.of<TimerProvider>(context, listen: false).init();
         _checkPermissions();
       }
     });
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (settings.hasShownNotificationPrompt) return;
 
     if (await Permission.notification.isDenied) {
-      if (!mounted) return;
+      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
       settings.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,
