@@ -2,6 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiktac_app/providers/timer_provider.dart';
 
+import 'package:flutter/cupertino.dart';
+
+void _showTimePicker(BuildContext context, TimerProvider provider) {
+  Duration tempDuration = Duration(seconds: provider.initialSeconds);
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (BuildContext builder) {
+      return SizedBox(
+        height: 300,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      provider.setTime(tempDuration.inSeconds);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Aceptar', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  textTheme: CupertinoTextThemeData(
+                    pickerTextStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.hms,
+                  initialTimerDuration: tempDuration,
+                  onTimerDurationChanged: (Duration newDuration) {
+                    tempDuration = newDuration;
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class TimerDisplay extends StatelessWidget {
   const TimerDisplay({super.key});
 
@@ -30,13 +91,19 @@ class TimerDisplay extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  provider.formattedTime,
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    color: provider.secondsRemaining == 0 && provider.initialSeconds > 0
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.onSurface,
+                GestureDetector(
+                  onTap: provider.isRunning ? null : () {
+                    _showTimePicker(context, provider);
+                  },
+                  child: Text(
+                    provider.formattedTime,
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      fontFamily: 'monospace',
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: provider.secondsRemaining == 0 && provider.initialSeconds > 0
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
               ],

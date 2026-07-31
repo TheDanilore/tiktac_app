@@ -17,24 +17,29 @@ class StopwatchDisplay extends StatelessWidget {
 
         return Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  mainTime,
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    fontFamily: 'monospace',
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    mainTime,
+                    style: theme.textTheme.displayLarge?.copyWith(
+                      fontFamily: 'monospace',
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                Text(
-                  milliseconds,
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontFamily: 'monospace',
+                  Text(
+                    milliseconds,
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      fontFamily: 'monospace',
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             Row(

@@ -25,6 +25,7 @@ dependencies:
   flutter_foreground_task: ^10.0.0
   flutter_ringtone_player: ^4.0.0+4
   file_picker: ^3.0.4
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

@@ -54,7 +54,7 @@ class TimerProvider extends ChangeNotifier {
         if (_remainingTimeMillis <= 0) {
           _remainingTimeMillis = 0;
           _isRunning = false;
-          _onTimerFinished(context);
+          if (context.mounted) _onTimerFinished(context);
         } else {
           _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
             if (_remainingTimeMillis > 0) {
@@ -73,6 +73,14 @@ class TimerProvider extends ChangeNotifier {
   void addTime(int minutes) {
     if (_isRunning) return;
     _initialSeconds += minutes * 60;
+    _targetTimeMillis = _initialSeconds * 1000;
+    _remainingTimeMillis = _targetTimeMillis;
+    notifyListeners();
+  }
+
+  void setTime(int seconds) {
+    if (_isRunning) return;
+    _initialSeconds = seconds;
     _targetTimeMillis = _initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
     notifyListeners();
