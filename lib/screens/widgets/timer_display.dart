@@ -109,7 +109,7 @@ class TimerDisplay extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            if (!provider.isRunning && provider.secondsRemaining == 0)
+            if (!provider.isRunning && provider.secondsRemaining == 0 && !provider.isAlarmRinging)
               Wrap(
                 spacing: 16,
                 runSpacing: 16,
@@ -122,26 +122,39 @@ class TimerDisplay extends StatelessWidget {
                 ],
               ),
             const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FloatingActionButton.large(
-                  heroTag: 'timer_play_pause',
-                  onPressed: () => provider.toggle(context),
-                  backgroundColor: provider.isRunning ? theme.colorScheme.error : theme.colorScheme.primary,
-                  child: Icon(provider.isRunning ? Icons.pause : Icons.play_arrow),
+            if (provider.isAlarmRinging)
+              ElevatedButton.icon(
+                onPressed: () => provider.stopAlarm(),
+                icon: const Icon(Icons.alarm_off, size: 28),
+                label: const Text('Parar Alarma', style: TextStyle(fontSize: 20)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.error,
+                  foregroundColor: theme.colorScheme.onError,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
-                const SizedBox(width: 24),
-                FloatingActionButton(
-                  heroTag: 'timer_stop',
-                  onPressed: () => provider.resetTimer(),
-                  backgroundColor: theme.colorScheme.surface,
-                  foregroundColor: theme.colorScheme.onSurface,
-                  elevation: 0,
-                  child: const Icon(Icons.stop),
-                ),
-              ],
-            ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FloatingActionButton.large(
+                    heroTag: 'timer_play_pause',
+                    onPressed: () => provider.toggle(context),
+                    backgroundColor: provider.isRunning ? theme.colorScheme.error : theme.colorScheme.primary,
+                    child: Icon(provider.isRunning ? Icons.pause : Icons.play_arrow),
+                  ),
+                  const SizedBox(width: 24),
+                  FloatingActionButton(
+                    heroTag: 'timer_stop',
+                    onPressed: () => provider.resetTimer(),
+                    backgroundColor: theme.colorScheme.surface,
+                    foregroundColor: theme.colorScheme.onSurface,
+                    elevation: 0,
+                    child: const Icon(Icons.stop),
+                  ),
+                ],
+              ),
           ],
         );
       },

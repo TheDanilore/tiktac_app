@@ -70,8 +70,8 @@ class ControlButtons extends StatelessWidget {
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F5132),
-                      foregroundColor: const Color(0xFF75B798),
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),

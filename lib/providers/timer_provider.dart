@@ -152,10 +152,14 @@ class TimerProvider extends ChangeNotifier {
     }
   }
 
+  bool _isAlarmRinging = false;
+  Timer? _vibrationTimer;
+
+  bool get isAlarmRinging => _isAlarmRinging;
+
   Future<void> _onTimerFinished(BuildContext context) async {
     _timer?.cancel();
     _isRunning = false;
-    notifyListeners();
     
     await FlutterForegroundTask.stopService();
 
@@ -163,21 +167,37 @@ class TimerProvider extends ChangeNotifier {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final stopwatchProvider = Provider.of<StopwatchProvider>(context, listen: false);
 
-    if (settings.isVibrationEnabled) {
-      if (!kIsWeb) {
-        Vibration.vibrate(duration: 50, amplitude: 128);
-      }
+    _isAlarmRinging = true;
+    notifyListeners();
+
+    if (settings.isSoundEnabled && !kIsWeb) {
+      FlutterRingtonePlayer().playAlarm(looping: true);
     }
 
-    if (settings.isSoundEnabled) {
-      if (!kIsWeb) {
-        FlutterRingtonePlayer().playNotification();
-      }
+    if (settings.isVibrationEnabled && !kIsWeb) {
+      _vibrationTimer?.cancel();
+      _vibrationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+        if (_isAlarmRinging) {
+          Vibration.vibrate(duration: 1000, amplitude: 255);
+        } else {
+          timer.cancel();
+        }
+      });
     }
     
     // Auto save the session
     stopwatchProvider.addEntry('Temporizador completado', 'Focus', _initialSeconds * 1000);
     _initialSeconds = 0;
+    notifyListeners();
+  }
+
+  void stopAlarm() {
+    _isAlarmRinging = false;
+    _vibrationTimer?.cancel();
+    if (!kIsWeb) {
+      FlutterRingtonePlayer().stop();
+      Vibration.cancel();
+    }
     notifyListeners();
   }
 
