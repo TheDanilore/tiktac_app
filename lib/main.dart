@@ -1,17 +1,16 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+import 'package:tiktac_app/core/di/injection_container.dart';
+import 'package:tiktac_app/core/theme/app_theme.dart';
 import 'package:tiktac_app/features/home/presentation/screens/home_screen.dart';
 import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
 import 'package:tiktac_app/features/settings/presentation/blocs/settings_state.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
-
-import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_local_data_source.dart';
-import 'package:tiktac_app/core/theme/app_theme.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:tiktac_app/core/di/injection_container.dart';
-
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 void _initForegroundTask() {
   FlutterForegroundTask.init(
@@ -37,17 +36,23 @@ void _initForegroundTask() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  FlutterForegroundTask.initCommunicationPort();
-  _initForegroundTask();
-  
-  await Hive.initFlutter();
 
-  // Inicializar inyección de dependencias
-  initDI();
+  try {
+    FlutterForegroundTask.initCommunicationPort();
+    _initForegroundTask();
+    
+    await Hive.initFlutter();
 
-  final service = sl<StopwatchLocalDataSource>();
-  await service.init();
+    // Inicializar inyección de dependencias
+    initDI();
+  } catch (e, s) {
+    developer.log(
+      'Error durante la inicialización principal de la app',
+      error: e,
+      stackTrace: s,
+      name: 'main',
+    );
+  }
 
   runApp(
     MultiBlocProvider(
@@ -58,7 +63,9 @@ void main() async {
         BlocProvider<StopwatchCubit>(
           create: (_) => sl<StopwatchCubit>()..init(),
         ),
-        BlocProvider<TimerCubit>(create: (_) => sl<TimerCubit>()),
+        BlocProvider<TimerCubit>(
+          create: (_) => sl<TimerCubit>(),
+        ),
       ],
       child: const MainApp(),
     ),
