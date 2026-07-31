@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
+import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
@@ -16,13 +17,24 @@ class HistoryView extends StatefulWidget {
   State<HistoryView> createState() => _HistoryViewState();
 }
 
+
+
 class _HistoryViewState extends State<HistoryView> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value, StopwatchProvider provider) {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      provider.search(value);
+    });
   }
 
   Future<void> _importCSV(BuildContext context, StopwatchProvider provider) async {
@@ -107,79 +119,80 @@ class _HistoryViewState extends State<HistoryView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Consumer<StopwatchProvider>(
-      builder: (context, provider, child) {
-        final entries = provider.entries;
+    final provider = context.read<StopwatchProvider>();
 
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Text('Historial', style: theme.textTheme.titleLarge),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => _importCSV(context, provider),
-                    icon: const Icon(Icons.file_upload),
-                    tooltip: 'Importar historial',
-                    color: theme.colorScheme.primary,
-                    style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Exportar Historial'),
-                          content: const Text('¿En qué formato deseas exportar los datos?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                final text = provider.exportData(); // TXT
-                                if (text.isNotEmpty) {
-                                  SharePlus.instance.share(ShareParams(
-                                    text: text,
-                                    subject: 'Historial de Cronómetro (TXT)',
-                                  ));
-                                }
-                              },
-                              child: const Text('Texto (TXT)'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                final csv = provider.exportCSVData(); // CSV
-                                if (csv.isNotEmpty) {
-                                  SharePlus.instance.share(ShareParams(
-                                    text: csv,
-                                    subject: 'Historial de Cronómetro (CSV)',
-                                  ));
-                                }
-                              },
-                              child: const Text('CSV'),
-                            ),
-                          ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Text('Historial', style: theme.textTheme.titleLarge),
+              const Spacer(),
+              IconButton(
+                onPressed: () => _importCSV(context, provider),
+                icon: const Icon(Icons.file_upload),
+                tooltip: 'Importar historial',
+                color: theme.colorScheme.primary,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Exportar Historial'),
+                      content: const Text('¿En qué formato deseas exportar los datos?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            final text = provider.exportData(); // TXT
+                            if (text.isNotEmpty) {
+                              SharePlus.instance.share(ShareParams(
+                                text: text,
+                                subject: 'Historial de Cronómetro (TXT)',
+                              ));
+                            }
+                          },
+                          child: const Text('Texto (TXT)'),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.download, size: 16),
-                    label: const Text('Exportar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surface,
-                      foregroundColor: theme.colorScheme.onSurface,
-                      elevation: 0,
-                      side: BorderSide(color: theme.colorScheme.outline),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            final csv = provider.exportCSVData(); // CSV
+                            if (csv.isNotEmpty) {
+                              SharePlus.instance.share(ShareParams(
+                                text: csv,
+                                subject: 'Historial de Cronómetro (CSV)',
+                              ));
+                            }
+                          },
+                          child: const Text('CSV'),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: provider.allEntries.isNotEmpty
+                  );
+                },
+                icon: const Icon(Icons.download, size: 16),
+                label: const Text('Exportar'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface,
+                  foregroundColor: theme.colorScheme.onSurface,
+                  elevation: 0,
+                  side: BorderSide(color: theme.colorScheme.outline),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Selector<StopwatchProvider, bool>(
+                selector: (_, p) => p.allEntries.isNotEmpty,
+                builder: (context, isNotEmpty, _) {
+                  return ElevatedButton(
+                    onPressed: isNotEmpty
                         ? () {
                             showDialog(
                               context: context,
@@ -213,16 +226,29 @@ class _HistoryViewState extends State<HistoryView> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     child: const Text('Borrar todo'),
-                  ),
-                ],
+                  );
+                },
               ),
-            ),
-            if (provider.allEntries.isNotEmpty) _StatsPanel(provider: provider),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
+            ],
+          ),
+        ),
+        Selector<StopwatchProvider, bool>(
+          selector: (_, p) => p.allEntries.isNotEmpty,
+          builder: (context, isNotEmpty, _) {
+            if (isNotEmpty) {
+              return _StatsPanel(provider: provider);
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: AnimatedBuilder(
+            animation: _searchController,
+            builder: (context, _) {
+              return TextField(
                 controller: _searchController,
-                onChanged: (value) => provider.search(value),
+                onChanged: (value) => _onSearchChanged(value, provider),
                 decoration: InputDecoration(
                   hintText: 'Buscar en el historial...',
                   prefixIcon: const Icon(Icons.search),
@@ -231,36 +257,41 @@ class _HistoryViewState extends State<HistoryView> {
                           icon: const Icon(Icons.clear),
                           onPressed: () {
                             _searchController.clear();
-                            provider.search('');
+                            _onSearchChanged('', provider);
                           },
                         )
                       : null,
                 ),
-              ),
-            ),
-            // Listado de registros
-            Expanded(
-              child: entries.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Aún no hay sesiones guardadas.',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      itemCount: entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = entries[index];
-                        return _HistoryCard(entry: entry);
-                      },
+              );
+            },
+          ),
+        ),
+        Expanded(
+          child: Selector<StopwatchProvider, List<dynamic>>(
+            selector: (_, p) => p.entries,
+            builder: (context, entries, _) {
+              if (entries.isEmpty) {
+                return Center(
+                  child: Text(
+                    'Aún no hay sesiones guardadas.',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-            ),
-          ],
-        );
-      },
+                  ),
+                );
+              }
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  return _HistoryCard(entry: entry);
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

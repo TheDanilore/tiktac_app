@@ -4,8 +4,9 @@
     <!-- Permiso para Feedback Háptico (Vibración) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Permisos de Almacenamiento (Compatibilidad con Android 10 e inferiores para guardar PDFs) -->
+    <!-- Permisos de Almacenamiento -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     
     <!-- SE CORRIGIÓ LA DECLARACIÓN DE REEMPLAZO BAJO LAS REGLAS DE ANDROID -->
     <uses-permission 

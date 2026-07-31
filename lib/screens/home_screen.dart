@@ -35,6 +35,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _checkPermissions() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    // Solicitar permisos de almacenamiento para backup en /TikTac
+    if (await Permission.manageExternalStorage.isDenied) {
+      await Permission.manageExternalStorage.request();
+    }
+    if (await Permission.storage.isDenied) {
+      await Permission.storage.request();
+    }
+
     if (settings.hasShownNotificationPrompt) return;
 
     if (await Permission.notification.isDenied) {

@@ -1,5 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:tiktac_app/models/stopwatch_entry.dart';
 
 class StopwatchService {
@@ -11,7 +13,52 @@ class StopwatchService {
   Future<void> init() async {
     await Hive.initFlutter();
     Hive.registerAdapter(StopwatchEntryAdapter());
-    _box = await Hive.openBox<StopwatchEntry>(boxName);
+    try {
+      _box = await Hive.openBox<StopwatchEntry>(boxName);
+    } catch (e) {
+      await Hive.deleteBoxFromDisk(boxName);
+      _box = await Hive.openBox<StopwatchEntry>(boxName);
+    }
+    if (_box.isEmpty) {
+      await _autoRestoreFromPublicFolder();
+    }
+  }
+
+  Future<void> _autoBackupToPublicFolder() async {
+    try {
+      final csvData = exportAsCSV();
+      Directory? directory;
+      if (Platform.isAndroid) {
+        directory = Directory('/storage/emulated/0/TikTac');
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+      } else {
+        directory = await getApplicationDocumentsDirectory();
+      }
+      final file = File('${directory.path}/Historial_Backup.csv');
+      await file.writeAsString(csvData);
+    } catch (e) {
+      // Ignorar errores de escritura silenciosamente
+    }
+  }
+
+  Future<void> _autoRestoreFromPublicFolder() async {
+    try {
+      Directory? directory;
+      if (Platform.isAndroid) {
+        directory = Directory('/storage/emulated/0/TikTac');
+      } else {
+        directory = await getApplicationDocumentsDirectory();
+      }
+      final file = File('${directory.path}/Historial_Backup.csv');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        await importFromCSV(content);
+      }
+    } catch (e) {
+      // Ignorar errores de escritura silenciosamente
+    }
   }
 
   // Obtener todos los registros ordenados por fecha (más recientes primero)
@@ -37,32 +84,38 @@ class StopwatchService {
       notes: notes,
     );
     await _box.add(entry);
+    _autoBackupToPublicFolder();
     return entry;
   }
 
   // Restaurar un registro eliminado
   Future<void> restoreEntry(StopwatchEntry entry) async {
     await _box.put(entry.key ?? entry.id, entry);
+    _autoBackupToPublicFolder();
   }
 
   // Actualizar un registro existente
   Future<void> updateEntry(StopwatchEntry entry) async {
     await _box.put(entry.key, entry);
+    _autoBackupToPublicFolder();
   }
 
   // Eliminar un registro
   Future<void> deleteEntry(dynamic key) async {
     await _box.delete(key);
+    _autoBackupToPublicFolder();
   }
 
   // Eliminar múltiples registros
   Future<void> deleteEntries(List<dynamic> keys) async {
     await _box.deleteAll(keys);
+    _autoBackupToPublicFolder();
   }
 
   // Eliminar todos los registros
   Future<void> clearAll() async {
     await _box.clear();
+    _autoBackupToPublicFolder();
   }
 
   // Obtener estadísticas
