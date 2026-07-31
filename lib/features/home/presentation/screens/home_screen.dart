@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -194,53 +195,7 @@ class _HomeScreenState extends State<HomeScreen>
                       );
                     },
                   )
-                : BlocSelector<StopwatchCubit, StopwatchState, int>(
-                    selector: (state) => state.elapsedTime,
-                    builder: (context, elapsedTime) {
-                      final hours = (elapsedTime ~/ 3600000).toString().padLeft(
-                        2,
-                        '0',
-                      );
-                      final minutes = ((elapsedTime ~/ 60000) % 60)
-                          .toString()
-                          .padLeft(2, '0');
-                      final seconds = ((elapsedTime ~/ 1000) % 60)
-                          .toString()
-                          .padLeft(2, '0');
-                      final formattedTime = elapsedTime >= 3600000
-                          ? '$hours:$minutes:$seconds'
-                          : '$minutes:$seconds';
-
-                      return Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.timer_outlined,
-                              color: Colors.white70,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  formattedTime,
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontFamily: 'monospace',
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                : const _StopwatchPipView(),
           ),
         );
       },
@@ -301,6 +256,114 @@ class _HomeScreenState extends State<HomeScreen>
                 );
               },
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StopwatchPipView extends StatefulWidget {
+  const _StopwatchPipView();
+
+  @override
+  State<_StopwatchPipView> createState() => _StopwatchPipViewState();
+}
+
+class _StopwatchPipViewState extends State<_StopwatchPipView> {
+  Timer? _timer;
+  int _localElapsedTime = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimerIfNeeded();
+  }
+
+  void _startTimerIfNeeded() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      final state = context.read<StopwatchCubit>().state;
+      if (state.status == StopwatchStatus.running &&
+          state.startMillis != null) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        setState(() {
+          _localElapsedTime = state.elapsedTime + (now - state.startMillis!);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<StopwatchCubit, StopwatchState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.elapsedTime != current.elapsedTime,
+      listener: (context, state) {
+        if (state.status == StopwatchStatus.running) {
+          if (_timer == null || !_timer!.isActive) {
+            _startTimerIfNeeded();
+          }
+        } else {
+          _timer?.cancel();
+          setState(() {
+            _localElapsedTime = state.elapsedTime;
+          });
+        }
+      },
+      builder: (context, state) {
+        if (state.status == StopwatchStatus.running &&
+            state.startMillis != null &&
+            (_timer == null || !_timer!.isActive)) {
+          _startTimerIfNeeded();
+        }
+
+        final displayTime = state.status == StopwatchStatus.running
+            ? _localElapsedTime
+            : state.elapsedTime;
+            
+        final hours = (displayTime ~/ 3600000).toString().padLeft(2, '0');
+        final minutes = ((displayTime ~/ 60000) % 60).toString().padLeft(2, '0');
+        final seconds = ((displayTime ~/ 1000) % 60).toString().padLeft(2, '0');
+        
+        final formattedTime = displayTime >= 3600000
+            ? '$hours:$minutes:$seconds'
+            : '$minutes:$seconds';
+
+        return Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.timer_outlined,
+                color: Colors.white70,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    formattedTime,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

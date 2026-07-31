@@ -209,11 +209,10 @@ class TimerCubit extends Cubit<TimerState> {
     SimplePip().setAutoPipMode(autoEnter: false);
 
     try {
-      await _stopwatchCubit.saveActivity(
-        title: 'Temporizador',
-        category: 'General',
-        notes: '',
-        finalElapsedTime: initialSeconds * 1000,
+      await _stopwatchCubit.addEntry(
+        'Temporizador',
+        'General',
+        initialSeconds * 1000,
       );
 
       // Limpiar las pending_sessions para que StopwatchCubit.init() no duplique
