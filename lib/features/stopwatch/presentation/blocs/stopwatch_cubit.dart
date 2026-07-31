@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_local_data_source.dart';
-import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/domain/repositories/stopwatch_repository.dart';
+import 'package:tiktac_app/features/stopwatch/domain/models/stopwatch_entry.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:tiktac_app/core/services/foreground_task_handler.dart';
@@ -12,14 +12,14 @@ import 'dart:developer' as developer;
 
 @injectable
 class StopwatchCubit extends Cubit<StopwatchState> {
-  final StopwatchLocalDataSource _service;
+  final StopwatchRepository _repository;
 
-  StopwatchCubit(this._service) : super(const StopwatchState());
+  StopwatchCubit(this._repository) : super(const StopwatchState());
 
   Future<void> init() async {
     try {
       emit(state.copyWith(isLoading: true));
-      await _service.init();
+      await _repository.init();
       loadEntries();
       await _checkPendingSessions();
       emit(state.copyWith(isLoading: false));
@@ -71,7 +71,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   void loadEntries() {
     try {
-      final entries = _service.getAll();
+      final entries = _repository.getAll();
       emit(state.copyWith(
         entries: entries,
         filterQuery: '',
@@ -119,8 +119,6 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   Future<void> pauseTimer({int? exactElapsedTime}) async {
     try {
-      // Si la UI estaba calculando y tenemos el dato exacto, lo usamos.
-      // Si no, calculamos el total si tenemos startMillis
       int newElapsed = exactElapsedTime ?? state.elapsedTime;
       if (exactElapsedTime == null && state.startMillis != null) {
         newElapsed += (DateTime.now().millisecondsSinceEpoch - state.startMillis!);
@@ -155,7 +153,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
     try {
       emit(state.copyWith(isLoading: true));
-      await _service.saveEntry(
+      await _repository.saveEntry(
         title: title,
         duration: finalElapsedTime,
         category: category,
@@ -172,7 +170,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   Future<void> addEntry(String title, String category, int duration) async {
     try {
-      await _service.saveEntry(
+      await _repository.saveEntry(
         title: title,
         duration: duration,
         category: category,
@@ -181,31 +179,34 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       loadEntries();
     } catch (e, s) {
       developer.log('Error adding entry', error: e, stackTrace: s);
+      emit(state.copyWith(errorMessage: 'No se pudo agregar la entrada.'));
     }
   }
 
   Future<void> updateEntry(StopwatchEntry entry) async {
     try {
-      await _service.updateEntry(entry);
+      await _repository.updateEntry(entry);
       loadEntries();
     } catch (e, s) {
       developer.log('Error updating entry', error: e, stackTrace: s);
+      emit(state.copyWith(errorMessage: 'No se pudo actualizar la entrada.'));
     }
   }
 
   Future<void> deleteEntry(dynamic key) async {
     try {
-      await _service.deleteEntry(key);
+      await _repository.deleteEntry(key);
       loadEntries();
     } catch (e, s) {
       developer.log('Error deleting entry', error: e, stackTrace: s);
+      emit(state.copyWith(errorMessage: 'No se pudo eliminar la entrada.'));
     }
   }
 
   Future<void> searchEntries(String query) async {
     emit(state.copyWith(isLoading: true));
     try {
-      final filtered = _service.searchByTitle(query);
+      final filtered = _repository.searchByTitle(query);
       emit(state.copyWith(
         filterQuery: query,
         filteredEntries: filtered,
@@ -214,7 +215,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     } catch (e, stack) {
       developer.log('Error searching entries', error: e, stackTrace: stack);
       emit(state.copyWith(
-        errorMessage: e.toString(),
+        errorMessage: 'Error al buscar entradas',
         isLoading: false,
       ));
     }
@@ -222,11 +223,11 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   Future<void> clearHistory() async {
     try {
-      await _service.clearAll();
+      await _repository.clearAll();
       loadEntries();
     } catch (e, stack) {
       developer.log('Error clearing history', error: e, stackTrace: stack);
-      emit(state.copyWith(errorMessage: e.toString()));
+      emit(state.copyWith(errorMessage: 'No se pudo borrar el historial'));
     }
   }
 
@@ -262,7 +263,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
           final elapsedMillis = int.tryParse(parts[3]) ?? 0;
           
           if (elapsedMillis > 0) {
-            await _service.saveEntry(
+            await _repository.saveEntry(
               title: title,
               duration: elapsedMillis,
               category: category,
@@ -278,6 +279,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       }
     } catch (e, stack) {
       developer.log('Error importing CSV', error: e, stackTrace: stack);
+      emit(state.copyWith(errorMessage: 'Error al importar datos CSV'));
     }
     return importedCount;
   }
@@ -286,7 +288,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     if (query.isEmpty) {
       emit(state.copyWith(filterQuery: '', filteredEntries: []));
     } else {
-      final filtered = _service.searchByTitle(query);
+      final filtered = _repository.searchByTitle(query);
       emit(state.copyWith(filterQuery: query, filteredEntries: filtered));
     }
   }
@@ -295,17 +297,17 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     if (category == 'Todos') {
       emit(state.copyWith(filterQuery: '', filteredEntries: []));
     } else {
-      final filtered = _service.getByCategory(category);
+      final filtered = _repository.getByCategory(category);
       emit(state.copyWith(filterQuery: category, filteredEntries: filtered));
     }
   }
 
   List<String> getCategories() {
-    return _service.getCategories();
+    return _repository.getCategories();
   }
 
   Map<String, dynamic> getStats() {
-    return _service.getStats();
+    return _repository.getStats();
   }
 
   void clearError() {

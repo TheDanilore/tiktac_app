@@ -2,7 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/domain/models/stopwatch_entry.dart';
 import 'package:injectable/injectable.dart';
 import 'dart:developer' as developer;
 

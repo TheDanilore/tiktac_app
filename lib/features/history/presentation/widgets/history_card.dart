@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/domain/models/stopwatch_entry.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/widgets/edit_activity_modal.dart';
 

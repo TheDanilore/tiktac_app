@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
-import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/domain/models/stopwatch_entry.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/widgets/quick_presets.dart';
 
 class EditActivityModal extends StatefulWidget {

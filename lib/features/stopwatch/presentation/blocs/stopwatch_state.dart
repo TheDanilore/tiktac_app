@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/domain/models/stopwatch_entry.dart';
 
 enum StopwatchStatus { initial, running, paused, error }
 
