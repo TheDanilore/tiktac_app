@@ -6,10 +6,13 @@ class TimerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: const TimerDisplay(),
-      ),
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: const TimerDisplay(),
+        ),
+      ],
     );
   }
 }
