@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tiktac_app/models/stopwatch_entry.dart';
 import 'package:tiktac_app/services/stopwatch_service.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -115,11 +116,12 @@ class StopwatchProvider with ChangeNotifier {
       await FlutterForegroundTask.restartService();
     } else {
       await FlutterForegroundTask.startService(
-        notificationTitle: 'Cronómetro',
-        notificationText: formattedTimeShort,
+        notificationTitle: 'Cronómetro activo',
+        notificationText: 'Tiempo corriendo...',
         callback: startCallback,
       );
     }
+    SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
 
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       _elapsedTime += 10;
@@ -131,7 +133,11 @@ class StopwatchProvider with ChangeNotifier {
     _timer?.cancel();
     _isRunning = false;
     notifyListeners();
+
     await FlutterForegroundTask.stopService();
+    await FlutterForegroundTask.removeData(key: 'mode');
+    
+    SimplePip().setAutoPipMode(autoEnter: false);
   }
 
   Future<void> resetTimer() async {
@@ -139,6 +145,8 @@ class StopwatchProvider with ChangeNotifier {
     _isRunning = false;
     _elapsedTime = 0;
     notifyListeners();
+    
+    SimplePip().setAutoPipMode(autoEnter: false);
     await FlutterForegroundTask.stopService();
   }
 

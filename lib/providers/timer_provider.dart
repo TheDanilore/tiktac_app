@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
@@ -80,6 +81,7 @@ class TimerProvider extends ChangeNotifier {
     _isRunning = false;
     notifyListeners();
     await FlutterForegroundTask.stopService();
+    SimplePip().setAutoPipMode(autoEnter: false);
   }
 
   Future<void> resetTimer() async {
@@ -90,6 +92,7 @@ class TimerProvider extends ChangeNotifier {
     _remainingTimeMillis = 0;
     notifyListeners();
     await FlutterForegroundTask.stopService();
+    SimplePip().setAutoPipMode(autoEnter: false);
   }
 
   void toggle(BuildContext context) {
@@ -116,11 +119,13 @@ class TimerProvider extends ChangeNotifier {
       await FlutterForegroundTask.restartService();
     } else {
       await FlutterForegroundTask.startService(
-        notificationTitle: 'Temporizador',
-        notificationText: formattedTime,
+        notificationTitle: 'Temporizador activo',
+        notificationText: 'Tiempo corriendo...',
         callback: startCallback,
       );
     }
+    
+    SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
 
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       if (_remainingTimeMillis > 0) {

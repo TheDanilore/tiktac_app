@@ -11,7 +11,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,8 +31,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       setState(() {});
     });
     
-    SimplePip().setAutoPipMode();
-    
     Future.microtask(() {
       if (mounted) {
         Provider.of<TimerProvider>(context, listen: false).init(context);
@@ -53,21 +50,51 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       pipBuilder: (context) {
         return Scaffold(
           backgroundColor: Colors.black,
-          body: Center(
-            child: _tabController.index == 1
-                ? Consumer<TimerProvider>(
-                    builder: (context, timer, _) => Text(
-                      timer.formattedTime,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'monospace'),
-                    ),
-                  )
-                : Consumer<StopwatchProvider>(
-                    builder: (context, stopwatch, _) => Text(
+          body: _tabController.index == 1
+              ? Consumer<TimerProvider>(
+                  builder: (context, timer, _) {
+                    final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
+                    return Stack(
+                      children: [
+                        // Background shadow filling
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: FractionallySizedBox(
+                            widthFactor: progress.clamp(0.0, 1.0),
+                            child: Container(
+                              color: Colors.white.withAlpha(64),
+                            ),
+                          ),
+                        ),
+                        // Timer text
+                        Center(
+                          child: Text(
+                            timer.formattedTime,
+                            style: const TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+              : Consumer<StopwatchProvider>(
+                  builder: (context, stopwatch, _) => Center(
+                    child: Text(
                       stopwatch.formattedTime,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ),
-          ),
+                ),
         );
       },
       builder: (context) {
