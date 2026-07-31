@@ -420,7 +420,7 @@ class _HistoryViewState extends State<HistoryView> {
 
   Future<void> _importCSV(BuildContext context, StopwatchProvider provider) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv', 'txt'],
       );
