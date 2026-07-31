@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -41,6 +42,14 @@ class TimerProvider extends ChangeNotifier {
   }
 
   Future<void> init(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    _lastSelectedSeconds = prefs.getInt('lastSelectedSeconds') ?? 0;
+    if (_lastSelectedSeconds > 0 && _initialSeconds == 0) {
+      _initialSeconds = _lastSelectedSeconds;
+      _targetTimeMillis = _initialSeconds * 1000;
+      _remainingTimeMillis = _targetTimeMillis;
+    }
+
     if (await FlutterForegroundTask.isRunningService) {
       final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
       if (mode == 'timer') {
@@ -56,13 +65,17 @@ class TimerProvider extends ChangeNotifier {
         if (_remainingTimeMillis <= 0) {
           _remainingTimeMillis = 0;
           _isRunning = false;
+          _isAlarmRinging = true; // Timer finished in background
           if (context.mounted) _onTimerFinished(context);
         } else {
+          final endTime = DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
           _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-            if (_remainingTimeMillis > 0) {
-              _remainingTimeMillis -= 10;
+            final now = DateTime.now().millisecondsSinceEpoch;
+            if (endTime > now) {
+              _remainingTimeMillis = endTime - now;
               notifyListeners();
             } else {
+              _remainingTimeMillis = 0;
               _onTimerFinished(context);
             }
           });
@@ -77,13 +90,20 @@ class TimerProvider extends ChangeNotifier {
     _initialSeconds += minutes * 60;
     _targetTimeMillis = _initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
+    if (_initialSeconds > 0) {
+      _lastSelectedSeconds = _initialSeconds;
+      SharedPreferences.getInstance().then((prefs) => prefs.setInt('lastSelectedSeconds', _initialSeconds));
+    }
     notifyListeners();
   }
 
   void setTime(int seconds) {
     if (_isRunning) return;
     _initialSeconds = seconds;
-    if (seconds > 0) _lastSelectedSeconds = seconds;
+    if (seconds > 0) {
+      _lastSelectedSeconds = seconds;
+      SharedPreferences.getInstance().then((prefs) => prefs.setInt('lastSelectedSeconds', seconds));
+    }
     _targetTimeMillis = _initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
     notifyListeners();
@@ -100,9 +120,9 @@ class TimerProvider extends ChangeNotifier {
   Future<void> resetTimer() async {
     _timer?.cancel();
     _isRunning = false;
-    _initialSeconds = 0;
-    _targetTimeMillis = 0;
-    _remainingTimeMillis = 0;
+    _initialSeconds = _lastSelectedSeconds;
+    _targetTimeMillis = _initialSeconds * 1000;
+    _remainingTimeMillis = _targetTimeMillis;
     notifyListeners();
     await FlutterForegroundTask.stopService();
     SimplePip().setAutoPipMode(autoEnter: false);
@@ -122,11 +142,14 @@ class TimerProvider extends ChangeNotifier {
     if (_isRunning || _remainingTimeMillis == 0) return;
     _isRunning = true;
     
+    final endTime = DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      if (_remainingTimeMillis > 0) {
-        _remainingTimeMillis -= 10;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (endTime > now) {
+        _remainingTimeMillis = endTime - now;
         notifyListeners();
       } else {
+        _remainingTimeMillis = 0;
         _onTimerFinished(context);
       }
     });

@@ -121,6 +121,8 @@ class TimerTaskHandler extends TaskHandler {
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _isRunning = false;
+    FlutterRingtonePlayer().stop();
+    Vibration.cancel();
   }
   
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -79,6 +80,21 @@ class SettingsScreen extends StatelessWidget {
                       onChanged: (val) => settings.setPipEnabled(val),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              _SectionTitle(title: 'Permisos'),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.colorScheme.outline),
+                ),
+                child: ListTile(
+                  title: const Text('Notificaciones'),
+                  subtitle: const Text('Configurar permiso en los ajustes del sistema'),
+                  trailing: const Icon(Icons.open_in_new),
+                  onTap: () => openAppSettings(),
                 ),
               ),
             ],

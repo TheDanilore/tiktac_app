@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
 import 'package:tiktac_app/providers/timer_provider.dart';
+import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/screens/settings_screen.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,8 +37,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _checkPermissions() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (settings.hasShownNotificationPrompt) return;
+
     if (await Permission.notification.isDenied) {
       if (!mounted) return;
+      settings.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -48,6 +53,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             'está minimizada o en segundo plano.',
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Omitir'),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
