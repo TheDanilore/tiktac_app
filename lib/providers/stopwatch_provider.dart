@@ -245,6 +245,12 @@ class StopwatchProvider with ChangeNotifier {
     return _service.exportAsCSV();
   }
 
+  Future<int> importCSVData(String csvData) async {
+    final count = await _service.importFromCSV(csvData);
+    loadEntries();
+    return count;
+  }
+
   @override
   void dispose() {
     _timer?.cancel();

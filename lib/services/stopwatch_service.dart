@@ -164,6 +164,58 @@ class StopwatchService {
     return buffer.toString();
   }
 
+  // Importar desde CSV
+  Future<int> importFromCSV(String csvData) async {
+    int importedCount = 0;
+    final lines = csvData.split('\n');
+    for (int i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      
+      final parts = line.split(',');
+      if (parts.length >= 4) {
+        try {
+          final title = parts[0].trim();
+          final category = parts[1].trim();
+          final durationStr = parts[2].trim();
+          final dateStr = parts[3].trim();
+          final notes = parts.length > 4 ? parts.sublist(4).join(',').trim() : '';
+
+          int durationMillis = 0;
+          final durationParts = durationStr.split(':');
+          if (durationParts.length == 3) {
+            final h = int.tryParse(durationParts[0]) ?? 0;
+            final m = int.tryParse(durationParts[1]) ?? 0;
+            final s = int.tryParse(durationParts[2]) ?? 0;
+            durationMillis = (h * 3600000) + (m * 60000) + (s * 1000);
+          } else if (durationParts.length == 2) {
+            final m = int.tryParse(durationParts[0]) ?? 0;
+            final s = int.tryParse(durationParts[1]) ?? 0;
+            durationMillis = (m * 60000) + (s * 1000);
+          }
+
+          final createdAt = DateTime.tryParse(dateStr) ?? DateTime.now();
+
+          if (durationMillis > 0) {
+            final entry = StopwatchEntry(
+              id: const Uuid().v4(),
+              title: title.isEmpty ? 'Importado' : title,
+              duration: durationMillis,
+              createdAt: createdAt,
+              category: category.isEmpty ? 'General' : category,
+              notes: notes,
+            );
+            await _box.add(entry);
+            importedCount++;
+          }
+        } catch (e) {
+          // Ignorar línea inválida
+        }
+      }
+    }
+    return importedCount;
+  }
+
   // Cerrar la base de datos
   Future<void> close() async {
     await _box.close();

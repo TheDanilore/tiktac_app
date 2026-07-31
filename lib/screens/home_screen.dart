@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -417,6 +418,39 @@ class _HistoryViewState extends State<HistoryView> {
     super.dispose();
   }
 
+  Future<void> _importCSV(BuildContext context, StopwatchProvider provider) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv', 'txt'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final contents = await file.readAsString();
+        final count = await provider.importCSVData(contents);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$count registros importados exitosamente'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al importar: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -432,6 +466,16 @@ class _HistoryViewState extends State<HistoryView> {
                 children: [
                   Text('Historial', style: theme.textTheme.titleLarge),
                   const Spacer(),
+                  IconButton(
+                    onPressed: () => _importCSV(context, provider),
+                    icon: const Icon(Icons.file_upload),
+                    tooltip: 'Importar historial',
+                    color: theme.colorScheme.primary,
+                    style: IconButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: () {
                       showDialog(
