@@ -40,6 +40,11 @@ class StopwatchService {
     return entry;
   }
 
+  // Restaurar un registro eliminado
+  Future<void> restoreEntry(StopwatchEntry entry) async {
+    await _box.put(entry.key ?? entry.id, entry);
+  }
+
   // Actualizar un registro existente
   Future<void> updateEntry(StopwatchEntry entry) async {
     await _box.put(entry.key, entry);
@@ -138,6 +143,24 @@ class StopwatchService {
       buffer.writeln('---');
     }
 
+    return buffer.toString();
+  }
+
+  // Exportar datos como CSV
+  String exportAsCSV() {
+    final entries = getAll();
+    final buffer = StringBuffer();
+    buffer.writeln('Título,Categoría,Duración,Fecha,Notas');
+    
+    for (final entry in entries) {
+      final title = entry.title.replaceAll(',', ' ');
+      final category = entry.category.replaceAll(',', ' ');
+      final duration = entry.formattedDuration;
+      final date = entry.createdAt.toIso8601String();
+      final notes = entry.notes.replaceAll(',', ' ').replaceAll('\n', ' ');
+      buffer.writeln('$title,$category,$duration,$date,$notes');
+    }
+    
     return buffer.toString();
   }
 

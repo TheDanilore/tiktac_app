@@ -192,6 +192,12 @@ class StopwatchProvider with ChangeNotifier {
     loadEntries();
   }
 
+  // Restaurar una entrada
+  Future<void> restoreEntry(StopwatchEntry entry) async {
+    await _service.restoreEntry(entry);
+    loadEntries();
+  }
+
   // Eliminar todo el historial
   Future<void> clearHistory() async {
     await _service.clearAll();
@@ -233,6 +239,10 @@ class StopwatchProvider with ChangeNotifier {
   // Exportar
   String exportData() {
     return _service.exportAsText();
+  }
+
+  String exportCSVData() {
+    return _service.exportAsCSV();
   }
 
   @override

@@ -7,6 +7,7 @@ import 'package:tiktac_app/screens/widgets/stopwatch_display.dart';
 import 'package:tiktac_app/screens/widgets/control_buttons.dart';
 import 'package:tiktac_app/screens/settings_screen.dart';
 import 'package:tiktac_app/screens/widgets/timer_display.dart';
+import 'package:tiktac_app/screens/widgets/edit_activity_modal.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
@@ -433,16 +434,44 @@ class _HistoryViewState extends State<HistoryView> {
                   const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {
-                      final text = provider.exportData();
-                      if (text.isNotEmpty) {
-                        SharePlus.instance.share(ShareParams(
-                          text: text,
-                          subject: 'Historial de Cronómetro',
-                        ));
-                      }
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Exportar Historial'),
+                          content: const Text('¿En qué formato deseas exportar los datos?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                final text = provider.exportData(); // TXT
+                                if (text.isNotEmpty) {
+                                  SharePlus.instance.share(ShareParams(
+                                    text: text,
+                                    subject: 'Historial de Cronómetro (TXT)',
+                                  ));
+                                }
+                              },
+                              child: const Text('Texto (TXT)'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                final csv = provider.exportCSVData(); // CSV
+                                if (csv.isNotEmpty) {
+                                  SharePlus.instance.share(ShareParams(
+                                    text: csv,
+                                    subject: 'Historial de Cronómetro (CSV)',
+                                  ));
+                                }
+                              },
+                              child: const Text('CSV'),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.download, size: 16),
-                    label: const Text('Exportar CSV'),
+                    label: const Text('Exportar'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.surface,
                       foregroundColor: theme.colorScheme.onSurface,
@@ -560,8 +589,39 @@ class _HistoryCard extends StatelessWidget {
         padding: const EdgeInsets.only(right: 24),
         child: Icon(Icons.delete_outline, color: theme.colorScheme.onError, size: 28),
       ),
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('¿Eliminar actividad?'),
+            content: const Text('¿Estás seguro de que deseas eliminar este registro?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
       onDismissed: (direction) {
-        Provider.of<StopwatchProvider>(context, listen: false).deleteEntry(entry.key);
+        final provider = Provider.of<StopwatchProvider>(context, listen: false);
+        provider.deleteEntry(entry.key);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Actividad eliminada'),
+            action: SnackBarAction(
+              label: 'Deshacer',
+              onPressed: () {
+                provider.restoreEntry(entry);
+              },
+            ),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -631,6 +691,9 @@ class _HistoryCard extends StatelessWidget {
             ),
           ),
           onTap: () {
+            EditActivityModal.show(context, entry: entry);
+          },
+          onLongPress: () {
             _showShareDialog(context, entry);
           },
         ),
