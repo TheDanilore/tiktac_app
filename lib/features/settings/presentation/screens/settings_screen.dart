@@ -10,11 +10,9 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ajustes'),
-      ),
+      appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -73,9 +71,13 @@ class SettingsScreen extends StatelessWidget {
                   builder: (context, isVibrationEnabled) {
                     return SwitchListTile(
                       title: const Text('Vibración Intensa'),
-                      subtitle: const Text('Al terminar el temporizador o acciones clave'),
+                      subtitle: const Text(
+                        'Al terminar el temporizador o acciones clave',
+                      ),
                       value: isVibrationEnabled,
-                      onChanged: (val) => context.read<SettingsCubit>().setVibrationEnabled(val),
+                      onChanged: (val) => context
+                          .read<SettingsCubit>()
+                          .setVibrationEnabled(val),
                     );
                   },
                 ),
@@ -85,9 +87,12 @@ class SettingsScreen extends StatelessWidget {
                   builder: (context, isSoundEnabled) {
                     return SwitchListTile(
                       title: const Text('Sonido'),
-                      subtitle: const Text('Reproducir alarma al finalizar el temporizador'),
+                      subtitle: const Text(
+                        'Reproducir alarma al finalizar el temporizador',
+                      ),
                       value: isSoundEnabled,
-                      onChanged: (val) => context.read<SettingsCubit>().setSoundEnabled(val),
+                      onChanged: (val) =>
+                          context.read<SettingsCubit>().setSoundEnabled(val),
                     );
                   },
                 ),
@@ -97,9 +102,12 @@ class SettingsScreen extends StatelessWidget {
                   builder: (context, isPipEnabled) {
                     return SwitchListTile(
                       title: const Text('Modo Encogido (PiP)'),
-                      subtitle: const Text('Mantener tiempo en pantalla al minimizar la app'),
+                      subtitle: const Text(
+                        'Mantener tiempo en pantalla al minimizar la app',
+                      ),
                       value: isPipEnabled,
-                      onChanged: (val) => context.read<SettingsCubit>().setPipEnabled(val),
+                      onChanged: (val) =>
+                          context.read<SettingsCubit>().setPipEnabled(val),
                     );
                   },
                 ),
@@ -118,20 +126,28 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 ListTile(
                   title: const Text('Notificaciones'),
-                  subtitle: const Text('Configurar permiso en los ajustes del sistema'),
+                  subtitle: const Text(
+                    'Configurar permiso en los ajustes del sistema',
+                  ),
                   trailing: const Icon(Icons.open_in_new),
                   onTap: () async {
                     try {
                       final opened = await openAppSettings();
                       if (!opened && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No se pudieron abrir los ajustes del sistema')),
+                          const SnackBar(
+                            content: Text(
+                              'No se pudieron abrir los ajustes del sistema',
+                            ),
+                          ),
                         );
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Error al acceder a los ajustes')),
+                          const SnackBar(
+                            content: Text('Error al acceder a los ajustes'),
+                          ),
                         );
                       }
                     }
@@ -140,7 +156,9 @@ class SettingsScreen extends StatelessWidget {
                 const Divider(height: 1),
                 ListTile(
                   title: const Text('Almacenamiento Local'),
-                  subtitle: const Text('Permite guardar el historial en la carpeta Documentos/TikTac (Descargas)'),
+                  subtitle: const Text(
+                    'Permite guardar el historial en la carpeta Documentos/TikTac (Descargas)',
+                  ),
                   trailing: const Icon(Icons.folder_outlined),
                   onTap: () async {
                     if (await Permission.manageExternalStorage.isDenied) {
@@ -151,7 +169,11 @@ class SettingsScreen extends StatelessWidget {
                     }
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Permisos de almacenamiento actualizados')),
+                        const SnackBar(
+                          content: Text(
+                            'Permisos de almacenamiento actualizados',
+                          ),
+                        ),
                       );
                     }
                   },

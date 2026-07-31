@@ -25,11 +25,17 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       await _checkPendingSessions();
       emit(state.copyWith(isLoading: false));
     } catch (e, s) {
-      developer.log('Error initializing StopwatchCubit', error: e, stackTrace: s);
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: 'Error al inicializar el cronómetro',
-      ));
+      developer.log(
+        'Error initializing StopwatchCubit',
+        error: e,
+        stackTrace: s,
+      );
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'Error al inicializar el cronómetro',
+        ),
+      );
     }
   }
 
@@ -49,20 +55,28 @@ class StopwatchCubit extends Cubit<StopwatchState> {
         }
         await prefs.setStringList('pending_sessions', []);
       }
-      
+
       if (await FlutterForegroundTask.isRunningService) {
         final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
         if (mode == 'stopwatch') {
-          int elapsed = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
-          final startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
-          
+          int elapsed =
+              await FlutterForegroundTask.getData<int>(
+                key: 'accumulatedMillis',
+              ) ??
+              0;
+          final startMillis =
+              await FlutterForegroundTask.getData<int>(key: 'startMillis') ??
+              DateTime.now().millisecondsSinceEpoch;
+
           elapsed += (DateTime.now().millisecondsSinceEpoch - startMillis);
-          
-          emit(state.copyWith(
-            status: StopwatchStatus.running,
-            elapsedTime: elapsed,
-            startMillis: startMillis,
-          ));
+
+          emit(
+            state.copyWith(
+              status: StopwatchStatus.running,
+              elapsedTime: elapsed,
+              startMillis: startMillis,
+            ),
+          );
         }
       }
     } catch (e, s) {
@@ -73,11 +87,9 @@ class StopwatchCubit extends Cubit<StopwatchState> {
   void loadEntries() {
     try {
       final entries = _repository.getAll();
-      emit(state.copyWith(
-        entries: entries,
-        filterQuery: '',
-        filteredEntries: [],
-      ));
+      emit(
+        state.copyWith(entries: entries, filterQuery: '', filteredEntries: []),
+      );
     } catch (e, s) {
       developer.log('Error loading entries', error: e, stackTrace: s);
       emit(state.copyWith(errorMessage: 'No se pudieron cargar las sesiones.'));
@@ -94,16 +106,24 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   Future<void> startTimer({required bool isPipEnabled}) async {
     if (state.status == StopwatchStatus.running) return;
-    
+
     final startMillis = DateTime.now().millisecondsSinceEpoch;
-    emit(state.copyWith(status: StopwatchStatus.running, startMillis: startMillis));
+    emit(
+      state.copyWith(status: StopwatchStatus.running, startMillis: startMillis),
+    );
 
     SimplePip().setAutoPipMode(autoEnter: isPipEnabled);
 
     try {
       await FlutterForegroundTask.saveData(key: 'mode', value: 'stopwatch');
-      await FlutterForegroundTask.saveData(key: 'startMillis', value: startMillis);
-      await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: state.elapsedTime);
+      await FlutterForegroundTask.saveData(
+        key: 'startMillis',
+        value: startMillis,
+      );
+      await FlutterForegroundTask.saveData(
+        key: 'accumulatedMillis',
+        value: state.elapsedTime,
+      );
 
       if (await FlutterForegroundTask.isRunningService) {
         await FlutterForegroundTask.restartService();
@@ -114,9 +134,13 @@ class StopwatchCubit extends Cubit<StopwatchState> {
           callback: startCallback,
         );
       }
-    } catch(e, s) {
+    } catch (e, s) {
       developer.log('Error starting foreground task', error: e, stackTrace: s);
-      emit(state.copyWith(errorMessage: 'Error al iniciar servicio en segundo plano'));
+      emit(
+        state.copyWith(
+          errorMessage: 'Error al iniciar servicio en segundo plano',
+        ),
+      );
     }
   }
 
@@ -124,11 +148,18 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     try {
       int newElapsed = exactElapsedTime ?? state.elapsedTime;
       if (exactElapsedTime == null && state.startMillis != null) {
-        newElapsed += (DateTime.now().millisecondsSinceEpoch - state.startMillis!);
+        newElapsed +=
+            (DateTime.now().millisecondsSinceEpoch - state.startMillis!);
       }
-      
-      emit(state.copyWith(status: StopwatchStatus.paused, elapsedTime: newElapsed, startMillis: null));
-      
+
+      emit(
+        state.copyWith(
+          status: StopwatchStatus.paused,
+          elapsedTime: newElapsed,
+          startMillis: null,
+        ),
+      );
+
       await FlutterForegroundTask.stopService();
       await FlutterForegroundTask.removeData(key: 'mode');
       SimplePip().setAutoPipMode(autoEnter: false);
@@ -169,7 +200,12 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       emit(state.copyWith(isLoading: false));
     } catch (e, s) {
       developer.log('Error saving activity', error: e, stackTrace: s);
-      emit(state.copyWith(isLoading: false, errorMessage: 'No se pudo guardar la sesión.'));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'No se pudo guardar la sesión.',
+        ),
+      );
     }
   }
 
@@ -201,8 +237,12 @@ class StopwatchCubit extends Cubit<StopwatchState> {
   Future<void> deleteEntry(dynamic key) async {
     // Optimistic Update: Actualizamos la UI instantáneamente
     final updatedEntries = state.entries.where((e) => e.id != key).toList();
-    final updatedFiltered = state.filteredEntries.where((e) => e.id != key).toList();
-    emit(state.copyWith(entries: updatedEntries, filteredEntries: updatedFiltered));
+    final updatedFiltered = state.filteredEntries
+        .where((e) => e.id != key)
+        .toList();
+    emit(
+      state.copyWith(entries: updatedEntries, filteredEntries: updatedFiltered),
+    );
     try {
       await _repository.deleteEntry(key);
     } catch (e, s) {
@@ -226,17 +266,21 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     emit(state.copyWith(isLoading: true));
     try {
       final filtered = _repository.searchByTitle(query);
-      emit(state.copyWith(
-        filterQuery: query,
-        filteredEntries: filtered,
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          filterQuery: query,
+          filteredEntries: filtered,
+          isLoading: false,
+        ),
+      );
     } catch (e, stack) {
       developer.log('Error searching entries', error: e, stackTrace: stack);
-      emit(state.copyWith(
-        errorMessage: 'Error al buscar entradas',
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          errorMessage: 'Error al buscar entradas',
+          isLoading: false,
+        ),
+      );
     }
   }
 
@@ -252,16 +296,18 @@ class StopwatchCubit extends Cubit<StopwatchState> {
 
   String exportCSVData() {
     if (state.entries.isEmpty) return '';
-    
+
     final buffer = StringBuffer();
     buffer.writeln('ID,Título,Categoría,Duración(ms),Fecha');
-    
+
     for (var entry in state.entries) {
       final title = entry.title.replaceAll(',', ' ');
       final category = entry.category.replaceAll(',', ' ');
-      buffer.writeln('${entry.id},$title,$category,${entry.duration},${entry.createdAt.toIso8601String()}');
+      buffer.writeln(
+        '${entry.id},$title,$category,${entry.duration},${entry.createdAt.toIso8601String()}',
+      );
     }
-    
+
     return buffer.toString();
   }
 
@@ -270,17 +316,17 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     try {
       final lines = csvString.split('\n');
       if (lines.isEmpty) return 0;
-      
+
       for (int i = 1; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
-        
+
         final parts = line.split(',');
         if (parts.length >= 5) {
           final title = parts[1];
           final category = parts[2];
           final elapsedMillis = int.tryParse(parts[3]) ?? 0;
-          
+
           if (elapsedMillis > 0) {
             await _repository.saveEntry(
               title: title,
@@ -292,7 +338,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
           }
         }
       }
-      
+
       if (importedCount > 0) {
         loadEntries();
       }

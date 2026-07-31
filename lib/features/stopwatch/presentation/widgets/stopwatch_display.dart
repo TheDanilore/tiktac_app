@@ -6,14 +6,15 @@ import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state
 
 class StopwatchDisplay extends StatefulWidget {
   final Function(int) onTimeTick;
-  
+
   const StopwatchDisplay({super.key, required this.onTimeTick});
 
   @override
   State<StopwatchDisplay> createState() => _StopwatchDisplayState();
 }
 
-class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerProviderStateMixin {
+class _StopwatchDisplayState extends State<StopwatchDisplay>
+    with SingleTickerProviderStateMixin {
   late Ticker _ticker;
   int _localElapsedTime = 0;
 
@@ -22,7 +23,8 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
     super.initState();
     _ticker = createTicker((elapsed) {
       final state = context.read<StopwatchCubit>().state;
-      if (state.status == StopwatchStatus.running && state.startMillis != null) {
+      if (state.status == StopwatchStatus.running &&
+          state.startMillis != null) {
         final now = DateTime.now().millisecondsSinceEpoch;
         setState(() {
           _localElapsedTime = state.elapsedTime + (now - state.startMillis!);
@@ -40,10 +42,19 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
 
   String _formatTime(int millisecondsTotal) {
     final hours = (millisecondsTotal ~/ 3600000).toString().padLeft(2, '0');
-    final minutes = ((millisecondsTotal ~/ 60000) % 60).toString().padLeft(2, '0');
-    final seconds = ((millisecondsTotal ~/ 1000) % 60).toString().padLeft(2, '0');
-    final milliseconds = ((millisecondsTotal ~/ 10) % 100).toString().padLeft(2, '0');
-    
+    final minutes = ((millisecondsTotal ~/ 60000) % 60).toString().padLeft(
+      2,
+      '0',
+    );
+    final seconds = ((millisecondsTotal ~/ 1000) % 60).toString().padLeft(
+      2,
+      '0',
+    );
+    final milliseconds = ((millisecondsTotal ~/ 10) % 100).toString().padLeft(
+      2,
+      '0',
+    );
+
     if (millisecondsTotal >= 3600000) {
       return '$hours:$minutes:$seconds';
     }
@@ -55,7 +66,9 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
     final theme = Theme.of(context);
 
     return BlocConsumer<StopwatchCubit, StopwatchState>(
-      listenWhen: (previous, current) => previous.status != current.status || previous.elapsedTime != current.elapsedTime,
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.elapsedTime != current.elapsedTime,
       listener: (context, state) {
         if (state.status == StopwatchStatus.running) {
           if (!_ticker.isActive) {
@@ -72,14 +85,18 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
       },
       builder: (context, state) {
         // En primer renderizado, asegurar que muestra el tiempo correcto si ya corría.
-        if (state.status == StopwatchStatus.running && state.startMillis != null && !_ticker.isActive) {
-           _ticker.start();
+        if (state.status == StopwatchStatus.running &&
+            state.startMillis != null &&
+            !_ticker.isActive) {
+          _ticker.start();
         }
-        
-        final displayTime = state.status == StopwatchStatus.running ? _localElapsedTime : state.elapsedTime;
+
+        final displayTime = state.status == StopwatchStatus.running
+            ? _localElapsedTime
+            : state.elapsedTime;
         final formattedTime = _formatTime(displayTime);
         final timeParts = formattedTime.split('.');
-        final mainTime = timeParts[0]; 
+        final mainTime = timeParts[0];
         final millisecondsStr = timeParts.length > 1 ? '.${timeParts[1]}' : '';
         final isRunning = state.status == StopwatchStatus.running;
 
@@ -119,13 +136,17 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: isRunning ? theme.colorScheme.secondary : theme.colorScheme.onSurfaceVariant,
+                    color: isRunning
+                        ? theme.colorScheme.secondary
+                        : theme.colorScheme.onSurfaceVariant,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isRunning ? 'EN PROGRESO' : (displayTime > 0 ? 'PAUSADO' : 'LISTO PARA INICIAR'),
+                  isRunning
+                      ? 'EN PROGRESO'
+                      : (displayTime > 0 ? 'PAUSADO' : 'LISTO PARA INICIAR'),
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: isRunning
                         ? theme.colorScheme.secondary

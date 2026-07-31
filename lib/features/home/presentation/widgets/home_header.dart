@@ -31,7 +31,11 @@ class HomeHeader extends StatelessWidget {
                   color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(Icons.timer, color: theme.colorScheme.onPrimary, size: 28),
+                child: Icon(
+                  Icons.timer,
+                  color: theme.colorScheme.onPrimary,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -40,15 +44,17 @@ class HomeHeader extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'TikTac',
-                          style: theme.textTheme.titleLarge,
-                        ),
+                        Text('TikTac', style: theme.textTheme.titleLarge),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

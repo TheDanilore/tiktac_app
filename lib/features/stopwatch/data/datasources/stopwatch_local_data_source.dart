@@ -50,7 +50,11 @@ class StopwatchLocalDataSource {
       final file = File('${directory.path}/Historial_Backup.csv');
       await file.writeAsString(csvData);
     } catch (e, s) {
-      developer.log('Fallo al exportar backup automático a directorio público', error: e, stackTrace: s);
+      developer.log(
+        'Fallo al exportar backup automático a directorio público',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 
@@ -68,7 +72,11 @@ class StopwatchLocalDataSource {
         await importFromCSV(content);
       }
     } catch (e, s) {
-      developer.log('Fallo al restaurar backup automático desde directorio público', error: e, stackTrace: s);
+      developer.log(
+        'Fallo al restaurar backup automático desde directorio público',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 
@@ -76,7 +84,7 @@ class StopwatchLocalDataSource {
   List<StopwatchEntry> getAll({int limit = 20, int offset = 0}) {
     final entries = _box.values.toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    
+
     if (offset >= entries.length) return [];
     return entries.skip(offset).take(limit).toList();
   }
@@ -164,25 +172,35 @@ class StopwatchLocalDataSource {
   }
 
   // Buscar registros por título con paginación (simulando .ilike y .range de Supabase)
-  List<StopwatchEntry> searchByTitle(String query, {int limit = 20, int offset = 0}) {
+  List<StopwatchEntry> searchByTitle(
+    String query, {
+    int limit = 20,
+    int offset = 0,
+  }) {
     final entries = _box.values
-        .where((entry) =>
-            entry.title.toLowerCase().contains(query.toLowerCase()) ||
-            entry.category.toLowerCase().contains(query.toLowerCase()))
+        .where(
+          (entry) =>
+              entry.title.toLowerCase().contains(query.toLowerCase()) ||
+              entry.category.toLowerCase().contains(query.toLowerCase()),
+        )
         .toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    
+
     if (offset >= entries.length) return [];
     return entries.skip(offset).take(limit).toList();
   }
 
   // Obtener registros por categoría con paginación
-  List<StopwatchEntry> getByCategory(String category, {int limit = 20, int offset = 0}) {
+  List<StopwatchEntry> getByCategory(
+    String category, {
+    int limit = 20,
+    int offset = 0,
+  }) {
     final entries = _box.values
         .where((entry) => entry.category == category)
         .toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    
+
     if (offset >= entries.length) return [];
     return entries.skip(offset).take(limit).toList();
   }
@@ -224,7 +242,7 @@ class StopwatchLocalDataSource {
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final buffer = StringBuffer();
     buffer.writeln('Título,Categoría,Duración,Fecha,Notas');
-    
+
     for (final entry in entries) {
       final title = entry.title.replaceAll(',', ' ');
       final category = entry.category.replaceAll(',', ' ');
@@ -233,7 +251,7 @@ class StopwatchLocalDataSource {
       final notes = entry.notes.replaceAll(',', ' ').replaceAll('\n', ' ');
       buffer.writeln('$title,$category,$duration,$date,$notes');
     }
-    
+
     return buffer.toString();
   }
 
@@ -244,7 +262,7 @@ class StopwatchLocalDataSource {
     for (int i = 1; i < lines.length; i++) {
       final line = lines[i].trim();
       if (line.isEmpty) continue;
-      
+
       final parts = line.split(',');
       if (parts.length >= 4) {
         try {
@@ -252,7 +270,9 @@ class StopwatchLocalDataSource {
           final category = parts[1].trim();
           final durationStr = parts[2].trim();
           final dateStr = parts[3].trim();
-          final notes = parts.length > 4 ? parts.sublist(4).join(',').trim() : '';
+          final notes = parts.length > 4
+              ? parts.sublist(4).join(',').trim()
+              : '';
 
           int durationMillis = 0;
           final durationParts = durationStr.split(':');
@@ -282,7 +302,11 @@ class StopwatchLocalDataSource {
             importedCount++;
           }
         } catch (e, s) {
-          developer.log('Error importando línea CSV: $line', error: e, stackTrace: s);
+          developer.log(
+            'Error importando línea CSV: $line',
+            error: e,
+            stackTrace: s,
+          );
         }
       }
     }

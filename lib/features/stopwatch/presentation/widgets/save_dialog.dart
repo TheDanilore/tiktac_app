@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class SaveDialog extends StatefulWidget {
   final Function(String title, String category, String notes) onSave;
 
-  const SaveDialog({
-    super.key,
-    required this.onSave,
-  });
+  const SaveDialog({super.key, required this.onSave});
 
   @override
   State<SaveDialog> createState() => _SaveDialogState();

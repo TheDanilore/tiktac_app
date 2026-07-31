@@ -17,7 +17,8 @@ void _initForegroundTask() {
     androidNotificationOptions: AndroidNotificationOptions(
       channelId: 'foreground_service',
       channelName: 'Foreground Service Notification',
-      channelDescription: 'Esta notificación aparece cuando el cronómetro está en uso.',
+      channelDescription:
+          'Esta notificación aparece cuando el cronómetro está en uso.',
       channelImportance: NotificationChannelImportance.LOW,
       priority: NotificationPriority.LOW,
     ),
@@ -40,7 +41,7 @@ void main() async {
   try {
     FlutterForegroundTask.initCommunicationPort();
     _initForegroundTask();
-    
+
     await Hive.initFlutter();
 
     // Inicializar inyección de dependencias
@@ -57,15 +58,11 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider<SettingsCubit>(
-          create: (_) => sl<SettingsCubit>()..init(),
-        ),
+        BlocProvider<SettingsCubit>(create: (_) => sl<SettingsCubit>()..init()),
         BlocProvider<StopwatchCubit>(
           create: (_) => sl<StopwatchCubit>()..init(),
         ),
-        BlocProvider<TimerCubit>(
-          create: (_) => sl<TimerCubit>(),
-        ),
+        BlocProvider<TimerCubit>(create: (_) => sl<TimerCubit>()),
       ],
       child: const MainApp(),
     ),

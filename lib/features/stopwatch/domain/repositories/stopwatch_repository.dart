@@ -15,8 +15,16 @@ abstract class StopwatchRepository {
   Future<void> deleteEntries(List<dynamic> keys);
   Future<void> clearAll();
   Map<String, dynamic> getStats();
-  List<StopwatchEntry> searchByTitle(String query, {int limit = 20, int offset = 0});
-  List<StopwatchEntry> getByCategory(String category, {int limit = 20, int offset = 0});
+  List<StopwatchEntry> searchByTitle(
+    String query, {
+    int limit = 20,
+    int offset = 0,
+  });
+  List<StopwatchEntry> getByCategory(
+    String category, {
+    int limit = 20,
+    int offset = 0,
+  });
   List<String> getCategories();
   String exportAsCSV();
   Future<int> importFromCSV(String csvData);

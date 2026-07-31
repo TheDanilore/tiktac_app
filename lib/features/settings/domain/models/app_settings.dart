@@ -30,8 +30,10 @@ class AppSettings {
       isPipEnabled: isPipEnabled ?? this.isPipEnabled,
       isVibrationEnabled: isVibrationEnabled ?? this.isVibrationEnabled,
       isSoundEnabled: isSoundEnabled ?? this.isSoundEnabled,
-      hasShownNotificationPrompt: hasShownNotificationPrompt ?? this.hasShownNotificationPrompt,
-      hasShownStoragePrompt: hasShownStoragePrompt ?? this.hasShownStoragePrompt,
+      hasShownNotificationPrompt:
+          hasShownNotificationPrompt ?? this.hasShownNotificationPrompt,
+      hasShownStoragePrompt:
+          hasShownStoragePrompt ?? this.hasShownStoragePrompt,
     );
   }
 

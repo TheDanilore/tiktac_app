@@ -8,10 +8,26 @@ class QuickPresets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final presets = [
-      {'title': 'Programación / Fix', 'category': 'Trabajo', 'icon': Icons.code},
-      {'title': 'Sesión de Estudio', 'category': 'Estudio', 'icon': Icons.menu_book},
-      {'title': 'Cocinar / Preparar comida', 'category': 'Hogar', 'icon': Icons.restaurant},
-      {'title': 'Rutina de Ejercicio', 'category': 'Salud', 'icon': Icons.fitness_center},
+      {
+        'title': 'Programación / Fix',
+        'category': 'Trabajo',
+        'icon': Icons.code,
+      },
+      {
+        'title': 'Sesión de Estudio',
+        'category': 'Estudio',
+        'icon': Icons.menu_book,
+      },
+      {
+        'title': 'Cocinar / Preparar comida',
+        'category': 'Hogar',
+        'icon': Icons.restaurant,
+      },
+      {
+        'title': 'Rutina de Ejercicio',
+        'category': 'Salud',
+        'icon': Icons.fitness_center,
+      },
     ];
 
     return Container(
@@ -27,7 +43,11 @@ class QuickPresets extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome, color: Color(0xFFEAB308), size: 20),
+              const Icon(
+                Icons.auto_awesome,
+                color: Color(0xFFEAB308),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -35,11 +55,17 @@ class QuickPresets extends StatelessWidget {
                   children: [
                     const Text(
                       'Ajustes Rápidos Preseteados',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       '(Clic para cargar título y categoría)',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -55,10 +81,16 @@ class QuickPresets extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: ActionChip(
                     backgroundColor: const Color(0xFF0F111A),
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                     label: Row(
                       children: [
-                        Icon(preset['icon'] as IconData, size: 16, color: const Color(0xFF2DD4BF)),
+                        Icon(
+                          preset['icon'] as IconData,
+                          size: 16,
+                          color: const Color(0xFF2DD4BF),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           preset['title'] as String,

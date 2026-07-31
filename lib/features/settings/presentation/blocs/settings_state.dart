@@ -41,5 +41,6 @@ class SettingsState {
           errorMessage == other.errorMessage;
 
   @override
-  int get hashCode => settings.hashCode ^ isLoading.hashCode ^ errorMessage.hashCode;
+  int get hashCode =>
+      settings.hashCode ^ isLoading.hashCode ^ errorMessage.hashCode;
 }

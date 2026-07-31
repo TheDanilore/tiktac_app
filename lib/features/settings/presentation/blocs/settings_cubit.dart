@@ -24,10 +24,12 @@ class SettingsCubit extends Cubit<SettingsState> {
         stackTrace: stackTrace,
         name: 'SettingsCubit',
       );
-      emit(state.copyWith(
-        isLoading: false,
-        errorMessage: 'No se pudieron cargar los ajustes.',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'No se pudieron cargar los ajustes.',
+        ),
+      );
     }
   }
 
@@ -47,7 +49,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   Future<void> setVibrationEnabled(bool enabled) async {
     if (state.isVibrationEnabled == enabled) return;
-    final updatedSettings = state.settings.copyWith(isVibrationEnabled: enabled);
+    final updatedSettings = state.settings.copyWith(
+      isVibrationEnabled: enabled,
+    );
     emit(state.copyWith(settings: updatedSettings));
     await _persistSettings(updatedSettings);
   }
@@ -61,14 +65,18 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   Future<void> setHasShownNotificationPrompt(bool shown) async {
     if (state.hasShownNotificationPrompt == shown) return;
-    final updatedSettings = state.settings.copyWith(hasShownNotificationPrompt: shown);
+    final updatedSettings = state.settings.copyWith(
+      hasShownNotificationPrompt: shown,
+    );
     emit(state.copyWith(settings: updatedSettings));
     await _persistSettings(updatedSettings);
   }
 
   Future<void> setHasShownStoragePrompt(bool shown) async {
     if (state.hasShownStoragePrompt == shown) return;
-    final updatedSettings = state.settings.copyWith(hasShownStoragePrompt: shown);
+    final updatedSettings = state.settings.copyWith(
+      hasShownStoragePrompt: shown,
+    );
     emit(state.copyWith(settings: updatedSettings));
     await _persistSettings(updatedSettings);
   }
@@ -83,9 +91,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         stackTrace: stackTrace,
         name: 'SettingsCubit',
       );
-      emit(state.copyWith(
-        errorMessage: 'Error guardando cambios.',
-      ));
+      emit(state.copyWith(errorMessage: 'Error guardando cambios.'));
     }
   }
 }

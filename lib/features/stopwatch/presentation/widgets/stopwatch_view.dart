@@ -34,7 +34,7 @@ class _StopwatchViewState extends State<StopwatchView> {
 
   void _showSaveModal() {
     SaveActivityModal.show(
-      context, 
+      context,
       finalElapsedTime: _timeNotifier.value,
       onSaved: () {
         _timeNotifier.value = 0;
@@ -49,9 +49,7 @@ class _StopwatchViewState extends State<StopwatchView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            StopwatchDisplay(
-              onTimeTick: _onTimeTick,
-            ),
+            StopwatchDisplay(onTimeTick: _onTimeTick),
             const SizedBox(height: 64),
             ValueListenableBuilder<int>(
               valueListenable: _timeNotifier,

@@ -8,9 +8,17 @@ class SaveActivityModal extends StatefulWidget {
   final VoidCallback onSaved;
   final int finalElapsedTime;
 
-  const SaveActivityModal({super.key, required this.onSaved, required this.finalElapsedTime});
+  const SaveActivityModal({
+    super.key,
+    required this.onSaved,
+    required this.finalElapsedTime,
+  });
 
-  static Future<void> show(BuildContext context, {required VoidCallback onSaved, required int finalElapsedTime}) {
+  static Future<void> show(
+    BuildContext context, {
+    required VoidCallback onSaved,
+    required int finalElapsedTime,
+  }) {
     final isTablet = MediaQuery.of(context).size.width >= 800;
 
     if (isTablet) {
@@ -19,10 +27,15 @@ class SaveActivityModal extends StatefulWidget {
         barrierDismissible: false,
         builder: (_) => Dialog(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
-            child: SaveActivityModal(onSaved: onSaved, finalElapsedTime: finalElapsedTime),
+            child: SaveActivityModal(
+              onSaved: onSaved,
+              finalElapsedTime: finalElapsedTime,
+            ),
           ),
         ),
       );
@@ -33,7 +46,10 @@ class SaveActivityModal extends StatefulWidget {
         isDismissible: false,
         enableDrag: false,
         backgroundColor: Colors.transparent,
-        builder: (_) => SaveActivityModal(onSaved: onSaved, finalElapsedTime: finalElapsedTime),
+        builder: (_) => SaveActivityModal(
+          onSaved: onSaved,
+          finalElapsedTime: finalElapsedTime,
+        ),
       );
     }
   }
@@ -72,24 +88,31 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
     final isTablet = MediaQuery.of(context).size.width >= 800;
 
     return BlocConsumer<StopwatchCubit, StopwatchState>(
-      listenWhen: (previous, current) => previous.isLoading != current.isLoading || previous.errorMessage != current.errorMessage,
+      listenWhen: (previous, current) =>
+          previous.isLoading != current.isLoading ||
+          previous.errorMessage != current.errorMessage,
       listener: (context, state) {
         if (!state.isLoading && state.errorMessage == null) {
           Navigator.of(context).pop();
           widget.onSaved();
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
                 children: [
                   Icon(Icons.check_circle, color: theme.colorScheme.surface),
                   const SizedBox(width: 8),
-                  const Text('Actividad guardada exitosamente', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Actividad guardada exitosamente',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               backgroundColor: theme.colorScheme.secondary,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               margin: const EdgeInsets.all(16),
             ),
           );
@@ -105,7 +128,7 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
       },
       builder: (context, state) {
         final isLoading = state.isLoading;
-        
+
         return Container(
           padding: EdgeInsets.only(
             left: 24,
@@ -115,11 +138,11 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
           ),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
-            borderRadius: isTablet 
-                ? BorderRadius.circular(24) 
+            borderRadius: isTablet
+                ? BorderRadius.circular(24)
                 : const BorderRadius.vertical(top: Radius.circular(32)),
-            border: isTablet 
-                ? null 
+            border: isTablet
+                ? null
                 : Border(top: BorderSide(color: theme.colorScheme.outline)),
           ),
           child: Form(
@@ -135,7 +158,9 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -152,7 +177,7 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
-                      )
+                      ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -216,12 +241,19 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: isLoading 
-                    ? const SizedBox(
-                        height: 20, width: 20, 
-                        child: CircularProgressIndicator(strokeWidth: 2)
-                      )
-                    : const Text('Categorizar y Guardar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Categorizar y Guardar',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ],
             ),

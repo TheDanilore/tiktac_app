@@ -5,13 +5,21 @@ class AppTheme {
   AppTheme._();
 
   static const _textTheme = TextTheme(
-    displayLarge: TextStyle(fontSize: 84, fontWeight: FontWeight.w900, letterSpacing: -2),
+    displayLarge: TextStyle(
+      fontSize: 84,
+      fontWeight: FontWeight.w900,
+      letterSpacing: -2,
+    ),
     displayMedium: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
     titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     bodyLarge: TextStyle(fontSize: 16),
     bodyMedium: TextStyle(fontSize: 14),
-    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1.2),
+    labelLarge: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.2,
+    ),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -49,9 +57,7 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       ),
@@ -119,9 +125,7 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       ),

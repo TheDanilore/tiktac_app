@@ -6,10 +6,13 @@ import 'package:tiktac_app/features/stopwatch/presentation/widgets/quick_presets
 
 class EditActivityModal extends StatefulWidget {
   final StopwatchEntry entry;
-  
+
   const EditActivityModal({super.key, required this.entry});
 
-  static Future<void> show(BuildContext context, {required StopwatchEntry entry}) {
+  static Future<void> show(
+    BuildContext context, {
+    required StopwatchEntry entry,
+  }) {
     final isTablet = MediaQuery.of(context).size.width >= 800;
 
     if (isTablet) {
@@ -17,7 +20,9 @@ class EditActivityModal extends StatefulWidget {
         context: context,
         builder: (_) => Dialog(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: EditActivityModal(entry: entry),
@@ -61,7 +66,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final cubit = context.read<StopwatchCubit>();
-    
+
     final title = _titleController.text.trim();
     final category = _categoryController.text.trim();
 
@@ -70,21 +75,29 @@ class _EditActivityModalState extends State<EditActivityModal> {
       category: category,
     );
     cubit.updateEntry(updatedEntry);
-    
+
     if (context.mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface),
+              Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.surface,
+              ),
               const SizedBox(width: 8),
-              const Text('Actividad actualizada', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Actividad actualizada',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           backgroundColor: Theme.of(context).colorScheme.secondary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -106,11 +119,11 @@ class _EditActivityModalState extends State<EditActivityModal> {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: isTablet 
-            ? BorderRadius.circular(24) 
+        borderRadius: isTablet
+            ? BorderRadius.circular(24)
             : const BorderRadius.vertical(top: Radius.circular(32)),
-        border: isTablet 
-            ? null 
+        border: isTablet
+            ? null
             : Border(top: BorderSide(color: theme.colorScheme.outline)),
       ),
       child: Form(
@@ -126,7 +139,9 @@ class _EditActivityModalState extends State<EditActivityModal> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.4,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -194,7 +209,10 @@ class _EditActivityModalState extends State<EditActivityModal> {
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('Guardar Cambios', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Guardar Cambios',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),

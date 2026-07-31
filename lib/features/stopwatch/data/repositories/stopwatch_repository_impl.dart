@@ -33,16 +33,19 @@ class StopwatchRepositoryImpl implements StopwatchRepository {
   }
 
   @override
-  Future<void> restoreEntry(StopwatchEntry entry) => _localDataSource.restoreEntry(entry);
+  Future<void> restoreEntry(StopwatchEntry entry) =>
+      _localDataSource.restoreEntry(entry);
 
   @override
-  Future<void> updateEntry(StopwatchEntry entry) => _localDataSource.updateEntry(entry);
+  Future<void> updateEntry(StopwatchEntry entry) =>
+      _localDataSource.updateEntry(entry);
 
   @override
   Future<void> deleteEntry(dynamic key) => _localDataSource.deleteEntry(key);
 
   @override
-  Future<void> deleteEntries(List<dynamic> keys) => _localDataSource.deleteEntries(keys);
+  Future<void> deleteEntries(List<dynamic> keys) =>
+      _localDataSource.deleteEntries(keys);
 
   @override
   Future<void> clearAll() => _localDataSource.clearAll();
@@ -51,13 +54,25 @@ class StopwatchRepositoryImpl implements StopwatchRepository {
   Map<String, dynamic> getStats() => _localDataSource.getStats();
 
   @override
-  List<StopwatchEntry> searchByTitle(String query, {int limit = 20, int offset = 0}) {
+  List<StopwatchEntry> searchByTitle(
+    String query, {
+    int limit = 20,
+    int offset = 0,
+  }) {
     return _localDataSource.searchByTitle(query, limit: limit, offset: offset);
   }
 
   @override
-  List<StopwatchEntry> getByCategory(String category, {int limit = 20, int offset = 0}) {
-    return _localDataSource.getByCategory(category, limit: limit, offset: offset);
+  List<StopwatchEntry> getByCategory(
+    String category, {
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return _localDataSource.getByCategory(
+      category,
+      limit: limit,
+      offset: offset,
+    );
   }
 
   @override
@@ -67,5 +82,6 @@ class StopwatchRepositoryImpl implements StopwatchRepository {
   String exportAsCSV() => _localDataSource.exportAsCSV();
 
   @override
-  Future<int> importFromCSV(String csvData) => _localDataSource.importFromCSV(csvData);
+  Future<int> importFromCSV(String csvData) =>
+      _localDataSource.importFromCSV(csvData);
 }

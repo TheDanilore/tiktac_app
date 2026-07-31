@@ -5,15 +5,15 @@ import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state
 class StatsPanel extends StatelessWidget {
   final StopwatchState state;
 
-  const StatsPanel({
-    super.key,
-    required this.state,
-  });
+  const StatsPanel({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
     final totalCount = state.entries.length;
-    final totalTime = state.entries.fold(0, (sum, entry) => sum + entry.duration);
+    final totalTime = state.entries.fold(
+      0,
+      (sum, entry) => sum + entry.duration,
+    );
     final averageTime = totalCount > 0 ? (totalTime ~/ totalCount) : 0;
 
     return Padding(

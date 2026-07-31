@@ -13,10 +13,7 @@ import 'package:tiktac_app/features/stopwatch/presentation/widgets/edit_activity
 class HistoryCard extends StatelessWidget {
   final StopwatchEntry entry;
 
-  const HistoryCard({
-    super.key,
-    required this.entry,
-  });
+  const HistoryCard({super.key, required this.entry});
 
   @override
   Widget build(BuildContext context) {
@@ -32,26 +29,36 @@ class HistoryCard extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        child: Icon(Icons.delete_outline, color: theme.colorScheme.onError, size: 28),
+        child: Icon(
+          Icons.delete_outline,
+          color: theme.colorScheme.onError,
+          size: 28,
+        ),
       ),
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('¿Eliminar actividad?'),
-            content: const Text('¿Estás seguro de que deseas eliminar este registro?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('¿Eliminar actividad?'),
+                content: const Text(
+                  '¿Estás seguro de que deseas eliminar este registro?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      'Eliminar',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        ) ?? false;
+            ) ??
+            false;
       },
       onDismissed: (_) {
         final cubit = context.read<StopwatchCubit>();
@@ -60,7 +67,9 @@ class HistoryCard extends StatelessWidget {
           SnackBar(
             content: const Text('Actividad eliminada'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             action: SnackBarAction(
               label: 'Deshacer',
               textColor: theme.colorScheme.primary,
@@ -89,7 +98,10 @@ class HistoryCard extends StatelessWidget {
               border: Border.all(color: theme.colorScheme.outline),
             ),
             child: Center(
-              child: Icon(Icons.timer_outlined, color: theme.colorScheme.onSurfaceVariant),
+              child: Icon(
+                Icons.timer_outlined,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           title: Text(
@@ -103,20 +115,30 @@ class HistoryCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       entry.category,
-                      style: TextStyle(fontSize: 11, color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     entry.createdAt.toString().split('.')[0],
-                    style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -144,16 +166,26 @@ class HistoryCard extends StatelessWidget {
 
   String _formatDuration(int millisecondsTotal) {
     final hours = (millisecondsTotal ~/ 3600000).toString().padLeft(2, '0');
-    final minutes = ((millisecondsTotal ~/ 60000) % 60).toString().padLeft(2, '0');
-    final seconds = ((millisecondsTotal ~/ 1000) % 60).toString().padLeft(2, '0');
-    
+    final minutes = ((millisecondsTotal ~/ 60000) % 60).toString().padLeft(
+      2,
+      '0',
+    );
+    final seconds = ((millisecondsTotal ~/ 1000) % 60).toString().padLeft(
+      2,
+      '0',
+    );
+
     if (millisecondsTotal >= 3600000) {
       return '$hours:$minutes:$seconds';
     }
     return '$minutes:$seconds';
   }
 
-  void _showOptionsBottomSheet(BuildContext context, StopwatchEntry entry, ThemeData theme) {
+  void _showOptionsBottomSheet(
+    BuildContext context,
+    StopwatchEntry entry,
+    ThemeData theme,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -184,7 +216,10 @@ class HistoryCard extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.delete, color: theme.colorScheme.error),
-                title: Text('Eliminar', style: TextStyle(color: theme.colorScheme.error)),
+                title: Text(
+                  'Eliminar',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _confirmDelete(context, entry);
@@ -203,7 +238,9 @@ class HistoryCard extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Eliminar actividad?'),
-        content: const Text('¿Estás seguro de que deseas eliminar este registro?'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar este registro?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -218,7 +255,9 @@ class HistoryCard extends StatelessWidget {
                 SnackBar(
                   content: const Text('Actividad eliminada'),
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   action: SnackBarAction(
                     label: 'Deshacer',
                     textColor: Theme.of(context).colorScheme.primary,
@@ -245,7 +284,9 @@ class HistoryCard extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           backgroundColor: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           contentPadding: const EdgeInsets.all(0),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -261,7 +302,11 @@ class HistoryCard extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.timer, color: theme.colorScheme.primary, size: 48),
+                      Icon(
+                        Icons.timer,
+                        color: theme.colorScheme.primary,
+                        size: 48,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         _formatDuration(entry.duration),
@@ -272,14 +317,13 @@ class HistoryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        entry.title,
-                        style: theme.textTheme.titleMedium,
-                      ),
+                      Text(entry.title, style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Text(
                         '${entry.category} • ${entry.createdAt.toString().split('.')[0]}',
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -297,8 +341,10 @@ class HistoryCard extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () async {
                       try {
-                        final directory = await getApplicationDocumentsDirectory();
-                        final path = '${directory.path}/screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+                        final directory =
+                            await getApplicationDocumentsDirectory();
+                        final path =
+                            '${directory.path}/screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
                         final image = await screenshotController.capture();
                         if (image != null) {
                           final file = File(path);

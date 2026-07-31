@@ -34,13 +34,17 @@ class CustomTab extends StatelessWidget {
             Icon(
               icon,
               size: 18,
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Text(
               text,
               style: TextStyle(
-                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -57,7 +61,9 @@ class CustomTab extends StatelessWidget {
                 child: Text(
                   badge!,
                   style: TextStyle(
-                    color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                    color: isSelected
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onSurfaceVariant,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),

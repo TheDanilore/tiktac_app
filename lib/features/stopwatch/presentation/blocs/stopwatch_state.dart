@@ -12,7 +12,7 @@ class StopwatchState extends Equatable {
   final String? errorMessage;
   final bool isLoading;
   final int? startMillis;
-  
+
   const StopwatchState({
     this.status = StopwatchStatus.initial,
     this.elapsedTime = 0,
@@ -24,8 +24,10 @@ class StopwatchState extends Equatable {
     this.startMillis,
   });
 
-  List<StopwatchEntry> get activeEntries => 
-      filteredEntries.isEmpty && filterQuery.isEmpty ? entries : filteredEntries;
+  List<StopwatchEntry> get activeEntries =>
+      filteredEntries.isEmpty && filterQuery.isEmpty
+      ? entries
+      : filteredEntries;
 
   StopwatchState copyWith({
     StopwatchStatus? status,
@@ -51,13 +53,13 @@ class StopwatchState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        elapsedTime,
-        entries,
-        filteredEntries,
-        filterQuery,
-        errorMessage,
-        isLoading,
-        startMillis,
-      ];
+    status,
+    elapsedTime,
+    entries,
+    filteredEntries,
+    filterQuery,
+    errorMessage,
+    isLoading,
+    startMillis,
+  ];
 }

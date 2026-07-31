@@ -24,17 +24,24 @@ class TimerTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-      final mode = await FlutterForegroundTask.getData<String>(key: 'mode') ?? 'stopwatch';
+      final mode =
+          await FlutterForegroundTask.getData<String>(key: 'mode') ??
+          'stopwatch';
       _isTimer = mode == 'timer';
-      _targetMillis = await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? 0;
-      _startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
-      _accumulatedMillis = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
-      
+      _targetMillis =
+          await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? 0;
+      _startMillis =
+          await FlutterForegroundTask.getData<int>(key: 'startMillis') ??
+          DateTime.now().millisecondsSinceEpoch;
+      _accumulatedMillis =
+          await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ??
+          0;
+
       final prefs = await SharedPreferences.getInstance();
       _isSoundEnabled = prefs.getBool('sound_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
       _lastNotifiedText = '';
-      
+
       _isRunning = true;
     } catch (e, s) {
       developer.log(
@@ -53,7 +60,7 @@ class TimerTaskHandler extends TaskHandler {
     try {
       final currentMillis = timestamp.millisecondsSinceEpoch;
       final elapsed = _accumulatedMillis + (currentMillis - _startMillis);
-      
+
       String timeStr = '';
       if (_isTimer) {
         final remaining = _targetMillis - elapsed;
@@ -62,12 +69,17 @@ class TimerTaskHandler extends TaskHandler {
           _isRunning = false;
           timeStr = '00:00';
           await _savePendingSession(_targetMillis);
-          
+
           if (_isSoundEnabled) {
             try {
               FlutterRingtonePlayer().playAlarm(looping: true);
             } catch (e, s) {
-              developer.log('Error playing ringtone', error: e, stackTrace: s, name: 'TimerTaskHandler');
+              developer.log(
+                'Error playing ringtone',
+                error: e,
+                stackTrace: s,
+                name: 'TimerTaskHandler',
+              );
             }
           }
           if (_isVibrationEnabled) {
@@ -75,21 +87,50 @@ class TimerTaskHandler extends TaskHandler {
               final hasVibrator = await Vibration.hasVibrator();
               if (hasVibrator == true) {
                 Vibration.vibrate(
-                  pattern: [0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+                  pattern: [
+                    0,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                    1000,
+                  ],
                 );
               }
             } catch (e, s) {
-              developer.log('Error triggering vibration', error: e, stackTrace: s, name: 'TimerTaskHandler');
+              developer.log(
+                'Error triggering vibration',
+                error: e,
+                stackTrace: s,
+                name: 'TimerTaskHandler',
+              );
             }
           }
-          
+
           FlutterForegroundTask.wakeUpScreen();
-          
+
           FlutterForegroundTask.updateService(
             notificationTitle: '¡Tiempo completado!',
             notificationText: 'Toca para detener la alarma.',
             notificationButtons: [
-              const NotificationButton(id: 'btn_stop_alarm', text: 'PARAR ALARMA')
+              const NotificationButton(
+                id: 'btn_stop_alarm',
+                text: 'PARAR ALARMA',
+              ),
             ],
           );
           return;
@@ -123,7 +164,7 @@ class TimerTaskHandler extends TaskHandler {
         _isRunning = false;
         final currentMillis = DateTime.now().millisecondsSinceEpoch;
         final elapsed = _accumulatedMillis + (currentMillis - _startMillis);
-        
+
         await _savePendingSession(elapsed);
         await FlutterForegroundTask.stopService();
       } else if (id == 'btn_stop_alarm') {
@@ -144,7 +185,7 @@ class TimerTaskHandler extends TaskHandler {
       );
     }
   }
-  
+
   Future<void> _savePendingSession(int timeElapsed) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -193,7 +234,7 @@ class TimerTaskHandler extends TaskHandler {
       );
     }
   }
-  
+
   @override
   void onNotificationPressed() {
     FlutterForegroundTask.launchApp();

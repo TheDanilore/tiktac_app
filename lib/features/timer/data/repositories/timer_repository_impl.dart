@@ -9,7 +9,8 @@ class TimerRepositoryImpl implements TimerRepository {
   TimerRepositoryImpl(this._localDataSource);
 
   @override
-  Future<int> getLastSelectedSeconds() => _localDataSource.getLastSelectedSeconds();
+  Future<int> getLastSelectedSeconds() =>
+      _localDataSource.getLastSelectedSeconds();
 
   @override
   Future<void> saveLastSelectedSeconds(int seconds) =>

@@ -19,14 +19,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     Future.microtask(() {
       if (mounted) {
         _checkPermissions();
@@ -44,8 +45,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
 
     if (!settingsCubit.state.hasShownStoragePrompt) {
-      if (await Permission.manageExternalStorage.isDenied || await Permission.storage.isDenied) {
-        if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+      if (await Permission.manageExternalStorage.isDenied ||
+          await Permission.storage.isDenied) {
+        if (!mounted ||
+            WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed)
+          return;
         settingsCubit.setHasShownStoragePrompt(true);
         await showDialog(
           context: context,
@@ -85,7 +89,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (settingsCubit.state.hasShownNotificationPrompt) return;
 
     if (await Permission.notification.isDenied) {
-      if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+      if (!mounted ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed)
+        return;
       settingsCubit.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,
@@ -140,7 +146,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ? BlocBuilder<TimerCubit, TimerState>(
                     builder: (context, state) {
                       final cubit = context.read<TimerCubit>();
-                      final progress = state.initialSeconds > 0 ? cubit.progress : 1.0;
+                      final progress = state.initialSeconds > 0
+                          ? cubit.progress
+                          : 1.0;
                       return Stack(
                         children: [
                           Align(
@@ -157,7 +165,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.hourglass_empty, color: Colors.white70, size: 20),
+                                const Icon(
+                                  Icons.hourglass_empty,
+                                  color: Colors.white70,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: FittedBox(
@@ -183,19 +195,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 : BlocSelector<StopwatchCubit, StopwatchState, int>(
                     selector: (state) => state.elapsedTime,
                     builder: (context, elapsedTime) {
-                      final hours = (elapsedTime ~/ 3600000).toString().padLeft(2, '0');
-                      final minutes = ((elapsedTime ~/ 60000) % 60).toString().padLeft(2, '0');
-                      final seconds = ((elapsedTime ~/ 1000) % 60).toString().padLeft(2, '0');
+                      final hours = (elapsedTime ~/ 3600000).toString().padLeft(
+                        2,
+                        '0',
+                      );
+                      final minutes = ((elapsedTime ~/ 60000) % 60)
+                          .toString()
+                          .padLeft(2, '0');
+                      final seconds = ((elapsedTime ~/ 1000) % 60)
+                          .toString()
+                          .padLeft(2, '0');
                       final formattedTime = elapsedTime >= 3600000
                           ? '$hours:$minutes:$seconds'
                           : '$minutes:$seconds';
-                      
+
                       return Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
+                            const Icon(
+                              Icons.timer_outlined,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: FittedBox(
@@ -236,7 +259,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         flex: 1,
                         child: Column(
                           children: [
-                            HomeHeader(isTablet: true, tabController: _tabController),
+                            HomeHeader(
+                              isTablet: true,
+                              tabController: _tabController,
+                            ),
                             const Expanded(child: StopwatchView()),
                           ],
                         ),
@@ -248,10 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         color: Theme.of(context).colorScheme.outline,
                       ),
                       // Right Panel: History
-                      const Expanded(
-                        flex: 1,
-                        child: HistoryView(),
-                      ),
+                      const Expanded(flex: 1, child: HistoryView()),
                     ],
                   );
                 }

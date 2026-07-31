@@ -9,16 +9,20 @@ class ControlButtons extends StatelessWidget {
   final VoidCallback onSave;
   final int localElapsedTime;
 
-  const ControlButtons({super.key, required this.onSave, required this.localElapsedTime});
+  const ControlButtons({
+    super.key,
+    required this.onSave,
+    required this.localElapsedTime,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return BlocBuilder<StopwatchCubit, StopwatchState>(
       builder: (context, state) {
         final isRunning = state.status == StopwatchStatus.running;
-        
+
         return Column(
           children: [
             Row(
@@ -32,10 +36,17 @@ class ControlButtons extends StatelessWidget {
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       if (isRunning) {
-                         context.read<StopwatchCubit>().pauseTimer(exactElapsedTime: localElapsedTime);
+                        context.read<StopwatchCubit>().pauseTimer(
+                          exactElapsedTime: localElapsedTime,
+                        );
                       } else {
-                         final isPipEnabled = context.read<SettingsCubit>().state.isPipEnabled;
-                         context.read<StopwatchCubit>().startTimer(isPipEnabled: isPipEnabled);
+                        final isPipEnabled = context
+                            .read<SettingsCubit>()
+                            .state
+                            .isPipEnabled;
+                        context.read<StopwatchCubit>().startTimer(
+                          isPipEnabled: isPipEnabled,
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -61,7 +72,9 @@ class ControlButtons extends StatelessWidget {
                         Text(
                           isRunning ? 'Pausar' : 'Iniciar',
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -90,7 +103,9 @@ class ControlButtons extends StatelessWidget {
                     child: const Text(
                       'Guardar',
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

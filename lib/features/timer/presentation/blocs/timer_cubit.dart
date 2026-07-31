@@ -22,26 +22,37 @@ class TimerCubit extends Cubit<TimerState> {
   int _targetTimeMillis = 0;
   int _remainingTimeMillis = 0;
 
-  TimerCubit(this._hardware, this._repository, this._stopwatchRepository) : super(const TimerInitial(0, 0)) {
+  TimerCubit(this._hardware, this._repository, this._stopwatchRepository)
+    : super(const TimerInitial(0, 0)) {
     _init();
   }
 
   Future<void> _init() async {
     try {
       final lastSelectedSeconds = await _repository.getLastSelectedSeconds();
-      
+
       if (await FlutterForegroundTask.isRunningService) {
         final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
         if (mode == 'timer') {
-          _targetTimeMillis = await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? 0;
-          final accumulatedMillis = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
-          final startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
-          
-          final elapsed = accumulatedMillis + (DateTime.now().millisecondsSinceEpoch - startMillis);
+          _targetTimeMillis =
+              await FlutterForegroundTask.getData<int>(key: 'targetMillis') ??
+              0;
+          final accumulatedMillis =
+              await FlutterForegroundTask.getData<int>(
+                key: 'accumulatedMillis',
+              ) ??
+              0;
+          final startMillis =
+              await FlutterForegroundTask.getData<int>(key: 'startMillis') ??
+              DateTime.now().millisecondsSinceEpoch;
+
+          final elapsed =
+              accumulatedMillis +
+              (DateTime.now().millisecondsSinceEpoch - startMillis);
           _remainingTimeMillis = _targetTimeMillis - elapsed;
 
           final initialSeconds = _targetTimeMillis ~/ 1000;
-          
+
           if (_remainingTimeMillis <= 0) {
             _remainingTimeMillis = 0;
             emit(TimerFinished(initialSeconds));
@@ -51,29 +62,33 @@ class TimerCubit extends Cubit<TimerState> {
           return;
         }
       }
-      
+
       _updateInitial(lastSelectedSeconds);
     } catch (e, stack) {
-      developer.log("Error initializing TimerCubit", error: e, stackTrace: stack);
+      developer.log(
+        "Error initializing TimerCubit",
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
   void addTime(int minutes) {
     if (state is TimerRunning) return;
-    
+
     const maxSeconds = 86399; // 23:59:59
     int newInitial = state.initialSeconds + (minutes * 60);
     if (newInitial > maxSeconds) newInitial = maxSeconds;
-    
+
     _updateInitial(newInitial);
   }
 
   void setTime(int seconds) {
     if (state is TimerRunning) return;
-    
+
     const maxSeconds = 86399; // 23:59:59
     int newInitial = seconds > maxSeconds ? maxSeconds : seconds;
-    
+
     _updateInitial(newInitial);
   }
 
@@ -98,17 +113,26 @@ class TimerCubit extends Cubit<TimerState> {
 
   Future<void> startTimer({required bool isPipEnabled}) async {
     if (state is TimerRunning || _remainingTimeMillis == 0) return;
-    
+
     SimplePip().setAutoPipMode(autoEnter: isPipEnabled);
-    
+
     final initialSeconds = state.initialSeconds;
     _startTicker(initialSeconds);
 
     try {
       await FlutterForegroundTask.saveData(key: 'mode', value: 'timer');
-      await FlutterForegroundTask.saveData(key: 'targetMillis', value: _targetTimeMillis);
-      await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
-      await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _targetTimeMillis - _remainingTimeMillis);
+      await FlutterForegroundTask.saveData(
+        key: 'targetMillis',
+        value: _targetTimeMillis,
+      );
+      await FlutterForegroundTask.saveData(
+        key: 'startMillis',
+        value: DateTime.now().millisecondsSinceEpoch,
+      );
+      await FlutterForegroundTask.saveData(
+        key: 'accumulatedMillis',
+        value: _targetTimeMillis - _remainingTimeMillis,
+      );
 
       if (await FlutterForegroundTask.isRunningService) {
         await FlutterForegroundTask.restartService();
@@ -120,22 +144,28 @@ class TimerCubit extends Cubit<TimerState> {
         );
       }
     } catch (e, stack) {
-      developer.log('Failed to start foreground task', error: e, stackTrace: stack);
+      developer.log(
+        'Failed to start foreground task',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
   void _startTicker(int initialSeconds) {
     _ticker?.cancel();
-    final endTime = DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
-    
+    final endTime =
+        DateTime.now().millisecondsSinceEpoch + _remainingTimeMillis;
+
     emit(TimerRunning(initialSeconds, (_remainingTimeMillis / 1000).ceil()));
-    
+
     _ticker = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final now = DateTime.now().millisecondsSinceEpoch;
       if (endTime > now) {
         _remainingTimeMillis = endTime - now;
         final newRemaining = (_remainingTimeMillis / 1000).ceil();
-        if (state is! TimerRunning || (state as TimerRunning).secondsRemaining != newRemaining) {
+        if (state is! TimerRunning ||
+            (state as TimerRunning).secondsRemaining != newRemaining) {
           emit(TimerRunning(initialSeconds, newRemaining));
         }
       } else {
@@ -147,7 +177,9 @@ class TimerCubit extends Cubit<TimerState> {
 
   Future<void> pauseTimer() async {
     _ticker?.cancel();
-    emit(TimerPaused(state.initialSeconds, (_remainingTimeMillis / 1000).ceil()));
+    emit(
+      TimerPaused(state.initialSeconds, (_remainingTimeMillis / 1000).ceil()),
+    );
     try {
       await FlutterForegroundTask.stopService();
       SimplePip().setAutoPipMode(autoEnter: false);
@@ -160,7 +192,7 @@ class TimerCubit extends Cubit<TimerState> {
     _ticker?.cancel();
     _targetTimeMillis = state.initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
-    
+
     emit(TimerInitial(state.initialSeconds, state.initialSeconds));
     try {
       await FlutterForegroundTask.stopService();
@@ -183,7 +215,11 @@ class TimerCubit extends Cubit<TimerState> {
         notes: '',
       );
     } catch (e, s) {
-      developer.log('Error al guardar historial del temporizador', error: e, stackTrace: s);
+      developer.log(
+        'Error al guardar historial del temporizador',
+        error: e,
+        stackTrace: s,
+      );
     }
 
     final isServiceRunning = await FlutterForegroundTask.isRunningService;
@@ -198,7 +234,7 @@ class TimerCubit extends Cubit<TimerState> {
     SimplePip().setAutoPipMode(autoEnter: false);
     emit(TimerInitial(0, state.initialSeconds));
   }
-  
+
   double get progress {
     if (_targetTimeMillis == 0) return 0.0;
     return 1 - (_remainingTimeMillis / _targetTimeMillis);
@@ -209,7 +245,7 @@ class TimerCubit extends Cubit<TimerState> {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    
+
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }

@@ -8,7 +8,10 @@ import 'package:vibration/vibration.dart';
 class HardwareService {
   HardwareService();
 
-  Future<void> playAlarm({bool? isSoundEnabled, bool? isVibrationEnabled}) async {
+  Future<void> playAlarm({
+    bool? isSoundEnabled,
+    bool? isVibrationEnabled,
+  }) async {
     bool playSound = isSoundEnabled ?? true;
     bool triggerVibration = isVibrationEnabled ?? true;
 
@@ -16,7 +19,8 @@ class HardwareService {
       try {
         final prefs = await SharedPreferences.getInstance();
         playSound = isSoundEnabled ?? (prefs.getBool('sound_enabled') ?? true);
-        triggerVibration = isVibrationEnabled ?? (prefs.getBool('vibration_enabled') ?? true);
+        triggerVibration =
+            isVibrationEnabled ?? (prefs.getBool('vibration_enabled') ?? true);
       } catch (e, s) {
         developer.log(
           'Error reading SharedPreferences in HardwareService',
@@ -45,7 +49,28 @@ class HardwareService {
         final hasVibrator = await Vibration.hasVibrator();
         if (hasVibrator == true) {
           Vibration.vibrate(
-            pattern: [0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
+            pattern: [
+              0,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+              1000,
+            ],
           );
         }
       } catch (e, s) {
