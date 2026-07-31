@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:simple_pip_mode/pip_widget.dart';
+import 'package:tiktac_app/features/history/presentation/widgets/history_view.dart';
+import 'package:tiktac_app/features/home/presentation/widgets/home_header.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/stopwatch_view.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
-import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
-import 'package:tiktac_app/features/settings/presentation/screens/settings_screen.dart';
-import 'package:simple_pip_mode/pip_widget.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:tiktac_app/features/history/presentation/widgets/history_view.dart';
-import 'package:tiktac_app/features/stopwatch/presentation/widgets/stopwatch_view.dart';
 import 'package:tiktac_app/features/timer/presentation/widgets/timer_view.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,9 +41,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (await Permission.manageExternalStorage.isDenied) {
       await Permission.manageExternalStorage.request();
     }
+    if (!mounted) return;
     if (await Permission.storage.isDenied) {
       await Permission.storage.request();
     }
+    if (!mounted) return;
 
     if (settingsCubit.state.hasShownNotificationPrompt) return;
 
@@ -52,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       settingsCubit.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Permiso de Notificaciones'),
           content: const Text(
             'Necesitamos el permiso de notificaciones para poder mostrarte '
@@ -62,13 +64,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const Text('Omitir'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 Permission.notification.request();
               },
               child: const Text('Aceptar'),
@@ -143,13 +145,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       );
                     },
                   )
-                : BlocBuilder<StopwatchCubit, StopwatchState>(
-                    builder: (context, stopwatchState) {
-                      final displayTime = stopwatchState.elapsedTime;
-                      final hours = (displayTime ~/ 3600000).toString().padLeft(2, '0');
-                      final minutes = ((displayTime ~/ 60000) % 60).toString().padLeft(2, '0');
-                      final seconds = ((displayTime ~/ 1000) % 60).toString().padLeft(2, '0');
-                      final formattedTime = displayTime >= 3600000 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
+                : BlocSelector<StopwatchCubit, StopwatchState, int>(
+                    selector: (state) => state.elapsedTime,
+                    builder: (context, elapsedTime) {
+                      final hours = (elapsedTime ~/ 3600000).toString().padLeft(2, '0');
+                      final minutes = ((elapsedTime ~/ 60000) % 60).toString().padLeft(2, '0');
+                      final seconds = ((elapsedTime ~/ 1000) % 60).toString().padLeft(2, '0');
+                      final formattedTime = elapsedTime >= 3600000
+                          ? '$hours:$minutes:$seconds'
+                          : '$minutes:$seconds';
                       
                       return Center(
                         child: Row(
@@ -184,245 +188,62 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return Scaffold(
           body: SafeArea(
             child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isTablet = constraints.maxWidth >= 800;
+              builder: (context, constraints) {
+                final isTablet = constraints.maxWidth >= 800;
 
-            if (isTablet) {
-              // Tablet / Desktop: Split View
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Left Panel: Stopwatch
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        _buildHeader(context, isTablet: true),
-                        const Expanded(child: StopwatchView()),
-                      ],
-                    ),
-                  ),
-                  // Divider
-                  VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  // Right Panel: History
-                  const Expanded(
-                    flex: 1,
-                    child: HistoryView(),
-                  ),
-                ],
-              );
-            }
-
-            // Mobile: Tabbed View
-            return Column(
-              children: [
-                _buildHeader(context, isTablet: false),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: const [
-                      StopwatchView(),
-                      TimerView(),
-                      HistoryView(),
+                if (isTablet) {
+                  // Tablet / Desktop: Split View
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Left Panel: Stopwatch
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          children: [
+                            HomeHeader(isTablet: true, tabController: _tabController),
+                            const Expanded(child: StopwatchView()),
+                          ],
+                        ),
+                      ),
+                      // Divider
+                      VerticalDivider(
+                        width: 1,
+                        thickness: 1,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      // Right Panel: History
+                      const Expanded(
+                        flex: 1,
+                        child: HistoryView(),
+                      ),
                     ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  },
-);
-  }
+                  );
+                }
 
-  Widget _buildHeader(BuildContext context, {required bool isTablet}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(Icons.timer, color: theme.colorScheme.onPrimary, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // Mobile: Tabbed View
+                return Column(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'TikTac',
-                          style: theme.textTheme.titleLarge,
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text('v2.0', style: TextStyle(color: theme.colorScheme.primary, fontSize: 10, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      'Tiempo bajo control',
-                      style: theme.textTheme.bodyMedium,
+                    HomeHeader(isTablet: false, tabController: _tabController),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: const [
+                          StopwatchView(),
+                          TimerView(),
+                          HistoryView(),
+                        ],
+                      ),
                     ),
                   ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings),
-                color: theme.colorScheme.onSurfaceVariant,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
-              ),
-            ],
-          ),
-          if (!isTablet) ...[
-            const SizedBox(height: 24),
-            AnimatedBuilder(
-              animation: _tabController,
-              builder: (context, child) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: theme.colorScheme.outline),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _CustomTab(
-                          icon: Icons.timer,
-                          text: 'Cronómetro',
-                          isSelected: _tabController.index == 0,
-                          onTap: () => _tabController.animateTo(0),
-                        ),
-                      ),
-                      Expanded(
-                        child: _CustomTab(
-                          icon: Icons.hourglass_bottom,
-                          text: 'Timer',
-                          isSelected: _tabController.index == 1,
-                          onTap: () => _tabController.animateTo(1),
-                        ),
-                      ),
-                      Expanded(
-                        child: BlocBuilder<StopwatchCubit, StopwatchState>(
-                          builder: (context, state) {
-                            return _CustomTab(
-                              icon: Icons.history,
-                              text: 'Historial',
-                              badge: state.entries.length.toString(),
-                              isSelected: _tabController.index == 2,
-                              onTap: () => _tabController.animateTo(2),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
                 );
-              }
+              },
             ),
-          ]
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
-
-class _CustomTab extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final String? badge;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _CustomTab({
-    required this.icon,
-    required this.text,
-    this.badge,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: TextStyle(
-                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (badge != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? theme.colorScheme.onPrimary.withValues(alpha: 0.2)
-                      : theme.scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  badge!,
-                  style: TextStyle(
-                    color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
