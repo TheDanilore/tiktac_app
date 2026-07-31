@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:vibration/vibration.dart';
 
 @pragma('vm:entry-point')
 void startCallback() {
@@ -14,6 +16,8 @@ class TimerTaskHandler extends TaskHandler {
   int _startMillis = 0; // for both
   int _accumulatedMillis = 0;
   bool _isRunning = false;
+  bool _isSoundEnabled = true;
+  bool _isVibrationEnabled = true;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -23,6 +27,11 @@ class TimerTaskHandler extends TaskHandler {
     _targetMillis = await FlutterForegroundTask.getData<int>(key: 'targetMillis') ?? 0;
     _startMillis = await FlutterForegroundTask.getData<int>(key: 'startMillis') ?? DateTime.now().millisecondsSinceEpoch;
     _accumulatedMillis = await FlutterForegroundTask.getData<int>(key: 'accumulatedMillis') ?? 0;
+    
+    final prefs = await SharedPreferences.getInstance();
+    _isSoundEnabled = prefs.getBool('sound_enabled') ?? true;
+    _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+    
     _isRunning = true;
   }
 
@@ -41,10 +50,22 @@ class TimerTaskHandler extends TaskHandler {
         _isRunning = false;
         timeStr = '00:00';
         _savePendingSession(_targetMillis);
+        
+        if (_isSoundEnabled) {
+          FlutterRingtonePlayer().playAlarm(looping: true);
+        }
+        if (_isVibrationEnabled) {
+          Vibration.vibrate(pattern: [0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]);
+        }
+        
+        FlutterForegroundTask.wakeUpScreen();
+        
         FlutterForegroundTask.updateService(
           notificationTitle: '¡Tiempo completado!',
-          notificationText: 'Tu sesión de concentración ha terminado.',
-          notificationButtons: [],
+          notificationText: 'Toca para detener la alarma.',
+          notificationButtons: [
+            const NotificationButton(id: 'btn_stop_alarm', text: 'PARAR ALARMA')
+          ],
         );
         return;
       }
@@ -69,6 +90,10 @@ class TimerTaskHandler extends TaskHandler {
       // Guardar sesión pendiente para que la app la procese cuando se abra
       await _savePendingSession(elapsed);
       
+      await FlutterForegroundTask.stopService();
+    } else if (id == 'btn_stop_alarm') {
+      FlutterRingtonePlayer().stop();
+      Vibration.cancel();
       await FlutterForegroundTask.stopService();
     }
   }

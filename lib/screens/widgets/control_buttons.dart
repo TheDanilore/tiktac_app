@@ -26,7 +26,7 @@ class ControlButtons extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      provider.toggleTimer();
+                      provider.toggleTimer(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: provider.isRunning

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tiktac_app/models/stopwatch_entry.dart';
+import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/services/stopwatch_service.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
@@ -95,15 +97,15 @@ class StopwatchProvider with ChangeNotifier {
   }
 
   // Iniciar/pausar cronómetro
-  void toggleTimer() {
+  void toggleTimer(BuildContext context) {
     if (_isRunning) {
       pauseTimer();
     } else {
-      startTimer();
+      startTimer(context);
     }
   }
 
-  Future<void> startTimer() async {
+  Future<void> startTimer(BuildContext context) async {
     if (_isRunning) return;
     _isRunning = true;
     
@@ -128,7 +130,12 @@ class StopwatchProvider with ChangeNotifier {
           callback: startCallback,
         );
       }
-      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
+      
+      if (!context.mounted) return;
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      if (settings.isPipEnabled) {
+        SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
+      }
     } catch(e) {
       debugPrint("Error starting foreground task: $e");
     }

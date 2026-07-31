@@ -5,7 +5,7 @@ import 'package:tiktac_app/providers/timer_provider.dart';
 import 'package:flutter/cupertino.dart';
 
 void _showTimePicker(BuildContext context, TimerProvider provider) {
-  Duration tempDuration = Duration(seconds: provider.initialSeconds);
+  Duration tempDuration = Duration(seconds: provider.initialSeconds > 0 ? provider.initialSeconds : provider.lastSelectedSeconds);
 
   showModalBottomSheet(
     context: context,

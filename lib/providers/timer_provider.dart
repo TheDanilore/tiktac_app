@@ -12,6 +12,7 @@ import 'package:vibration/vibration.dart';
 
 class TimerProvider extends ChangeNotifier {
   int _initialSeconds = 0;
+  int _lastSelectedSeconds = 0;
   int _remainingTimeMillis = 0;
   int _targetTimeMillis = 0;
   Timer? _timer;
@@ -19,6 +20,7 @@ class TimerProvider extends ChangeNotifier {
 
   int get secondsRemaining => (_remainingTimeMillis / 1000).ceil();
   int get initialSeconds => _initialSeconds;
+  int get lastSelectedSeconds => _lastSelectedSeconds > 0 ? _lastSelectedSeconds : 0;
   bool get isRunning => _isRunning;
 
   String get formattedTime {
@@ -81,6 +83,7 @@ class TimerProvider extends ChangeNotifier {
   void setTime(int seconds) {
     if (_isRunning) return;
     _initialSeconds = seconds;
+    if (seconds > 0) _lastSelectedSeconds = seconds;
     _targetTimeMillis = _initialSeconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
     notifyListeners();
@@ -146,7 +149,11 @@ class TimerProvider extends ChangeNotifier {
         );
       }
       
-      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
+      if (!context.mounted) return;
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      if (settings.isPipEnabled) {
+        SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
+      }
     } catch(e) {
       debugPrint("Error starting foreground task: $e");
     }
