@@ -106,27 +106,32 @@ class StopwatchProvider with ChangeNotifier {
   Future<void> startTimer() async {
     if (_isRunning) return;
     _isRunning = true;
-    notifyListeners();
-
-    await FlutterForegroundTask.saveData(key: 'mode', value: 'stopwatch');
-    await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
-    await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _elapsedTime);
-
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.restartService();
-    } else {
-      await FlutterForegroundTask.startService(
-        notificationTitle: 'Cronómetro activo',
-        notificationText: 'Tiempo corriendo...',
-        callback: startCallback,
-      );
-    }
-    SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
-
+    
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       _elapsedTime += 10;
       notifyListeners();
     });
+    
+    notifyListeners();
+
+    try {
+      await FlutterForegroundTask.saveData(key: 'mode', value: 'stopwatch');
+      await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
+      await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _elapsedTime);
+
+      if (await FlutterForegroundTask.isRunningService) {
+        await FlutterForegroundTask.restartService();
+      } else {
+        await FlutterForegroundTask.startService(
+          notificationTitle: 'Cronómetro activo',
+          notificationText: 'Tiempo corriendo...',
+          callback: startCallback,
+        );
+      }
+      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
+    } catch(e) {
+      debugPrint("Error starting foreground task: $e");
+    }
   }
 
   Future<void> pauseTimer() async {

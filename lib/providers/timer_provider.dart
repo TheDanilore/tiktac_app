@@ -118,25 +118,7 @@ class TimerProvider extends ChangeNotifier {
   Future<void> startTimer(BuildContext context) async {
     if (_isRunning || _remainingTimeMillis == 0) return;
     _isRunning = true;
-    notifyListeners();
-
-    await FlutterForegroundTask.saveData(key: 'mode', value: 'timer');
-    await FlutterForegroundTask.saveData(key: 'targetMillis', value: _targetTimeMillis);
-    await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
-    await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _targetTimeMillis - _remainingTimeMillis);
-
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.restartService();
-    } else {
-      await FlutterForegroundTask.startService(
-        notificationTitle: 'Temporizador activo',
-        notificationText: 'Tiempo corriendo...',
-        callback: startCallback,
-      );
-    }
     
-    SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
-
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       if (_remainingTimeMillis > 0) {
         _remainingTimeMillis -= 10;
@@ -145,6 +127,29 @@ class TimerProvider extends ChangeNotifier {
         _onTimerFinished(context);
       }
     });
+    
+    notifyListeners();
+
+    try {
+      await FlutterForegroundTask.saveData(key: 'mode', value: 'timer');
+      await FlutterForegroundTask.saveData(key: 'targetMillis', value: _targetTimeMillis);
+      await FlutterForegroundTask.saveData(key: 'startMillis', value: DateTime.now().millisecondsSinceEpoch);
+      await FlutterForegroundTask.saveData(key: 'accumulatedMillis', value: _targetTimeMillis - _remainingTimeMillis);
+
+      if (await FlutterForegroundTask.isRunningService) {
+        await FlutterForegroundTask.restartService();
+      } else {
+        await FlutterForegroundTask.startService(
+          notificationTitle: 'Temporizador activo',
+          notificationText: 'Tiempo corriendo...',
+          callback: startCallback,
+        );
+      }
+      
+      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
+    } catch(e) {
+      debugPrint("Error starting foreground task: $e");
+    }
   }
 
   Future<void> _onTimerFinished(BuildContext context) async {
