@@ -37,6 +37,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _checkPermissions() async {
     final settingsCubit = context.read<SettingsCubit>();
 
+    // Esperar a que los ajustes se hayan cargado desde Hive para no leer el estado por defecto (false)
+    while (settingsCubit.state.isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+    }
+
     if (!settingsCubit.state.hasShownStoragePrompt) {
       if (await Permission.manageExternalStorage.isDenied || await Permission.storage.isDenied) {
         if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
