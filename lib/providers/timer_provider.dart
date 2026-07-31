@@ -146,7 +146,7 @@ class TimerProvider extends ChangeNotifier {
         );
       }
       
-      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (239, 100));
+      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (16, 9));
     } catch(e) {
       debugPrint("Error starting foreground task: $e");
     }

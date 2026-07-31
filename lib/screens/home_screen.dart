@@ -79,52 +79,70 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return PipWidget(
       pipBuilder: (context) {
         return Scaffold(
-          backgroundColor: Colors.black,
-          body: _tabController.index == 1
-              ? Consumer<TimerProvider>(
-                  builder: (context, timer, _) {
-                    final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
-                    return Stack(
-                      children: [
-                        // Background shadow filling
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: FractionallySizedBox(
-                            widthFactor: progress.clamp(0.0, 1.0),
-                            child: Container(
-                              color: Colors.white.withAlpha(64),
+          backgroundColor: Colors.transparent,
+          body: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              color: Colors.black,
+              child: _tabController.index == 1
+                  ? Consumer<TimerProvider>(
+                      builder: (context, timer, _) {
+                        final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
+                        return Stack(
+                          children: [
+                            // Background shadow filling
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: progress.clamp(0.0, 1.0),
+                                child: Container(
+                                  color: Colors.white.withAlpha(64),
+                                ),
+                              ),
+                            ),
+                            // Timer text
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: Text(
+                                    timer.formattedTime,
+                                    style: const TextStyle(
+                                      fontSize: 42,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  : Consumer<StopwatchProvider>(
+                      builder: (context, stopwatch, _) => Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: Text(
+                              stopwatch.formattedTime,
+                              style: const TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontFamily: 'monospace',
+                              ),
                             ),
                           ),
                         ),
-                        // Timer text
-                        Center(
-                          child: Text(
-                            timer.formattedTime,
-                            style: const TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                )
-              : Consumer<StopwatchProvider>(
-                  builder: (context, stopwatch, _) => Center(
-                    child: Text(
-                      stopwatch.formattedTime,
-                      style: const TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'monospace',
                       ),
                     ),
-                  ),
-                ),
+            ),
+          ),
         );
       },
       builder: (context) {
