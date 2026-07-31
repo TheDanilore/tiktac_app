@@ -8,6 +8,7 @@ import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:tiktac_app/core/services/foreground_task_handler.dart';
 import 'package:injectable/injectable.dart';
+import 'package:simple_pip_mode/simple_pip.dart';
 import 'dart:developer' as developer;
 
 @injectable
@@ -97,6 +98,8 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     final startMillis = DateTime.now().millisecondsSinceEpoch;
     emit(state.copyWith(status: StopwatchStatus.running, startMillis: startMillis));
 
+    SimplePip().setAutoPipMode(autoEnter: isPipEnabled);
+
     try {
       await FlutterForegroundTask.saveData(key: 'mode', value: 'stopwatch');
       await FlutterForegroundTask.saveData(key: 'startMillis', value: startMillis);
@@ -128,6 +131,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       
       await FlutterForegroundTask.stopService();
       await FlutterForegroundTask.removeData(key: 'mode');
+      SimplePip().setAutoPipMode(autoEnter: false);
     } catch (e, s) {
       developer.log('Error pausing timer', error: e, stackTrace: s);
     }
@@ -138,6 +142,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
       emit(state.copyWith(status: StopwatchStatus.initial, elapsedTime: 0));
       await FlutterForegroundTask.stopService();
       await FlutterForegroundTask.removeData(key: 'mode');
+      SimplePip().setAutoPipMode(autoEnter: false);
     } catch (e, s) {
       developer.log('Error resetting timer', error: e, stackTrace: s);
     }

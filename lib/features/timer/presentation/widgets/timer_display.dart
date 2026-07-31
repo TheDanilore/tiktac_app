@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/widgets/time_button.dart';
 
 void _showTimePicker(BuildContext context, TimerCubit cubit) {
@@ -167,7 +168,10 @@ class TimerDisplay extends StatelessWidget {
                 children: [
                   FloatingActionButton.large(
                     heroTag: 'timer_play_pause',
-                    onPressed: () => context.read<TimerCubit>().toggle(),
+                    onPressed: () {
+                      final isPipEnabled = context.read<SettingsCubit>().state.isPipEnabled;
+                      context.read<TimerCubit>().toggle(isPipEnabled: isPipEnabled);
+                    },
                     backgroundColor: isRunning ? theme.colorScheme.error : theme.colorScheme.primary,
                     child: Icon(isRunning ? Icons.pause : Icons.play_arrow),
                   ),

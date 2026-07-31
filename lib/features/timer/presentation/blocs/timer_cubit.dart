@@ -83,18 +83,20 @@ class TimerCubit extends Cubit<TimerState> {
     emit(TimerInitial(seconds, seconds));
   }
 
-  Future<void> toggle() async {
+  Future<void> toggle({required bool isPipEnabled}) async {
     if (state is TimerRunning) {
       await pauseTimer();
     } else {
       if (_remainingTimeMillis > 0) {
-        await startTimer();
+        await startTimer(isPipEnabled: isPipEnabled);
       }
     }
   }
 
-  Future<void> startTimer() async {
+  Future<void> startTimer({required bool isPipEnabled}) async {
     if (state is TimerRunning || _remainingTimeMillis == 0) return;
+    
+    SimplePip().setAutoPipMode(autoEnter: isPipEnabled);
     
     final initialSeconds = state.initialSeconds;
     _startTicker(initialSeconds);

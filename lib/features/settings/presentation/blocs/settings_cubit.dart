@@ -66,6 +66,13 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _persistSettings(updatedSettings);
   }
 
+  Future<void> setHasShownStoragePrompt(bool shown) async {
+    if (state.hasShownStoragePrompt == shown) return;
+    final updatedSettings = state.settings.copyWith(hasShownStoragePrompt: shown);
+    emit(state.copyWith(settings: updatedSettings));
+    await _persistSettings(updatedSettings);
+  }
+
   Future<void> _persistSettings(AppSettings updatedSettings) async {
     try {
       await _repository.saveSettings(updatedSettings);

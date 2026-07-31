@@ -6,6 +6,7 @@ class AppSettings {
   final bool isVibrationEnabled;
   final bool isSoundEnabled;
   final bool hasShownNotificationPrompt;
+  final bool hasShownStoragePrompt;
 
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -13,6 +14,7 @@ class AppSettings {
     this.isVibrationEnabled = true,
     this.isSoundEnabled = true,
     this.hasShownNotificationPrompt = false,
+    this.hasShownStoragePrompt = false,
   });
 
   AppSettings copyWith({
@@ -21,6 +23,7 @@ class AppSettings {
     bool? isVibrationEnabled,
     bool? isSoundEnabled,
     bool? hasShownNotificationPrompt,
+    bool? hasShownStoragePrompt,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -28,6 +31,7 @@ class AppSettings {
       isVibrationEnabled: isVibrationEnabled ?? this.isVibrationEnabled,
       isSoundEnabled: isSoundEnabled ?? this.isSoundEnabled,
       hasShownNotificationPrompt: hasShownNotificationPrompt ?? this.hasShownNotificationPrompt,
+      hasShownStoragePrompt: hasShownStoragePrompt ?? this.hasShownStoragePrompt,
     );
   }
 
@@ -40,7 +44,8 @@ class AppSettings {
           isPipEnabled == other.isPipEnabled &&
           isVibrationEnabled == other.isVibrationEnabled &&
           isSoundEnabled == other.isSoundEnabled &&
-          hasShownNotificationPrompt == other.hasShownNotificationPrompt;
+          hasShownNotificationPrompt == other.hasShownNotificationPrompt &&
+          hasShownStoragePrompt == other.hasShownStoragePrompt;
 
   @override
   int get hashCode =>
@@ -48,5 +53,6 @@ class AppSettings {
       isPipEnabled.hashCode ^
       isVibrationEnabled.hashCode ^
       isSoundEnabled.hashCode ^
-      hasShownNotificationPrompt.hashCode;
+      hasShownNotificationPrompt.hashCode ^
+      hasShownStoragePrompt.hashCode;
 }

@@ -17,6 +17,7 @@ class SettingsState {
   bool get isVibrationEnabled => settings.isVibrationEnabled;
   bool get isSoundEnabled => settings.isSoundEnabled;
   bool get hasShownNotificationPrompt => settings.hasShownNotificationPrompt;
+  bool get hasShownStoragePrompt => settings.hasShownStoragePrompt;
 
   SettingsState copyWith({
     AppSettings? settings,

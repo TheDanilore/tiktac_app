@@ -37,14 +37,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _checkPermissions() async {
     final settingsCubit = context.read<SettingsCubit>();
 
-    // Solicitar permisos de almacenamiento para backup en /TikTac
-    if (await Permission.manageExternalStorage.isDenied) {
-      await Permission.manageExternalStorage.request();
+    if (!settingsCubit.state.hasShownStoragePrompt) {
+      if (await Permission.manageExternalStorage.isDenied || await Permission.storage.isDenied) {
+        if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+        settingsCubit.setHasShownStoragePrompt(true);
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Permiso de Almacenamiento'),
+            content: const Text(
+              'Para poder exportar tu historial y crear copias de seguridad en la carpeta de descargas (TikTac), '
+              'necesitamos acceso al almacenamiento. Puedes configurarlo más tarde en Ajustes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('Omitir'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  if (await Permission.manageExternalStorage.isDenied) {
+                    await Permission.manageExternalStorage.request();
+                  }
+                  if (await Permission.storage.isDenied) {
+                    await Permission.storage.request();
+                  }
+                },
+                child: const Text('Aceptar'),
+              ),
+            ],
+          ),
+        );
+      }
     }
-    if (!mounted) return;
-    if (await Permission.storage.isDenied) {
-      await Permission.storage.request();
-    }
+
     if (!mounted) return;
 
     if (settingsCubit.state.hasShownNotificationPrompt) return;

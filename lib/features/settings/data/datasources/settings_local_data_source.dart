@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiktac_app/features/settings/domain/models/app_settings.dart';
 
 abstract class SettingsLocalDataSource {
@@ -44,6 +45,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       final isVibrationEnabled = box.get('isVibrationEnabled', defaultValue: true) as bool;
       final isSoundEnabled = box.get('isSoundEnabled', defaultValue: true) as bool;
       final hasShownNotificationPrompt = box.get('hasShownNotificationPrompt', defaultValue: false) as bool;
+      final hasShownStoragePrompt = box.get('hasShownStoragePrompt', defaultValue: false) as bool;
 
       return AppSettings(
         themeMode: themeMode,
@@ -51,6 +53,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         isVibrationEnabled: isVibrationEnabled,
         isSoundEnabled: isSoundEnabled,
         hasShownNotificationPrompt: hasShownNotificationPrompt,
+        hasShownStoragePrompt: hasShownStoragePrompt,
       );
     } catch (e, stackTrace) {
       developer.log(
@@ -72,6 +75,11 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       await box.put('isVibrationEnabled', settings.isVibrationEnabled);
       await box.put('isSoundEnabled', settings.isSoundEnabled);
       await box.put('hasShownNotificationPrompt', settings.hasShownNotificationPrompt);
+      await box.put('hasShownStoragePrompt', settings.hasShownStoragePrompt);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('sound_enabled', settings.isSoundEnabled);
+      await prefs.setBool('vibration_enabled', settings.isVibrationEnabled);
     } catch (e, stackTrace) {
       developer.log(
         'Error guardando ajustes en Hive',

@@ -114,26 +114,49 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: theme.colorScheme.outline),
             ),
-            child: ListTile(
-              title: const Text('Notificaciones'),
-              subtitle: const Text('Configurar permiso en los ajustes del sistema'),
-              trailing: const Icon(Icons.open_in_new),
-              onTap: () async {
-                try {
-                  final opened = await openAppSettings();
-                  if (!opened && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No se pudieron abrir los ajustes del sistema')),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error al acceder a los ajustes')),
-                    );
-                  }
-                }
-              },
+            child: Column(
+              children: [
+                ListTile(
+                  title: const Text('Notificaciones'),
+                  subtitle: const Text('Configurar permiso en los ajustes del sistema'),
+                  trailing: const Icon(Icons.open_in_new),
+                  onTap: () async {
+                    try {
+                      final opened = await openAppSettings();
+                      if (!opened && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No se pudieron abrir los ajustes del sistema')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Error al acceder a los ajustes')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Almacenamiento Local'),
+                  subtitle: const Text('Permite guardar el historial en la carpeta Documentos/TikTac (Descargas)'),
+                  trailing: const Icon(Icons.folder_outlined),
+                  onTap: () async {
+                    if (await Permission.manageExternalStorage.isDenied) {
+                      await Permission.manageExternalStorage.request();
+                    }
+                    if (await Permission.storage.isDenied) {
+                      await Permission.storage.request();
+                    }
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Permisos de almacenamiento actualizados')),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
           ),
         ],
