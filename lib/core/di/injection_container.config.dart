@@ -19,8 +19,8 @@ import '../../features/settings/domain/repositories/settings_repository.dart'
     as _i674;
 import '../../features/settings/presentation/blocs/settings_cubit.dart'
     as _i573;
-import '../../features/stopwatch/data/datasources/stopwatch_service.dart'
-    as _i58;
+import '../../features/stopwatch/data/datasources/stopwatch_local_data_source.dart'
+    as _i316;
 import '../../features/stopwatch/presentation/blocs/stopwatch_cubit.dart'
     as _i707;
 import '../../features/timer/presentation/blocs/timer_cubit.dart' as _i816;
@@ -38,17 +38,18 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     gh.lazySingleton<_i616.HardwareService>(() => _i616.HardwareService());
-    gh.lazySingleton<_i58.StopwatchService>(() => _i58.StopwatchService());
+    gh.lazySingleton<_i316.StopwatchLocalDataSource>(
+        () => _i316.StopwatchLocalDataSource());
     gh.lazySingleton<_i599.SettingsLocalDataSource>(
         () => _i599.SettingsLocalDataSourceImpl());
     gh.lazySingleton<_i674.SettingsRepository>(() =>
         _i955.SettingsRepositoryImpl(gh<_i599.SettingsLocalDataSource>()));
     gh.lazySingleton<_i573.SettingsCubit>(
         () => _i573.SettingsCubit(gh<_i674.SettingsRepository>()));
-    gh.factory<_i707.StopwatchCubit>(
-        () => _i707.StopwatchCubit(gh<_i58.StopwatchService>()));
     gh.factory<_i816.TimerCubit>(
         () => _i816.TimerCubit(gh<_i616.HardwareService>()));
+    gh.factory<_i707.StopwatchCubit>(
+        () => _i707.StopwatchCubit(gh<_i316.StopwatchLocalDataSource>()));
     return this;
   }
 }

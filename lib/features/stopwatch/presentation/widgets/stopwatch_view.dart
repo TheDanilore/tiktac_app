@@ -13,24 +13,32 @@ class StopwatchView extends StatefulWidget {
 }
 
 class _StopwatchViewState extends State<StopwatchView> {
-  int _currentLocalElapsedTime = 0;
+  late final ValueNotifier<int> _timeNotifier;
 
   @override
   void initState() {
     super.initState();
-    // Leer tiempo inicial si ya está corriendo o pausado
-    _currentLocalElapsedTime = context.read<StopwatchCubit>().state.elapsedTime;
+    final initialTime = context.read<StopwatchCubit>().state.elapsedTime;
+    _timeNotifier = ValueNotifier<int>(initialTime);
+  }
+
+  @override
+  void dispose() {
+    _timeNotifier.dispose();
+    super.dispose();
   }
 
   void _onTimeTick(int time) {
-    _currentLocalElapsedTime = time;
+    _timeNotifier.value = time;
   }
 
   void _showSaveModal() {
     SaveActivityModal.show(
       context, 
-      finalElapsedTime: _currentLocalElapsedTime,
-      onSaved: () {},
+      finalElapsedTime: _timeNotifier.value,
+      onSaved: () {
+        _timeNotifier.value = 0;
+      },
     );
   }
 
@@ -45,9 +53,14 @@ class _StopwatchViewState extends State<StopwatchView> {
               onTimeTick: _onTimeTick,
             ),
             const SizedBox(height: 64),
-            ControlButtons(
-              onSave: _showSaveModal,
-              localElapsedTime: _currentLocalElapsedTime,
+            ValueListenableBuilder<int>(
+              valueListenable: _timeNotifier,
+              builder: (context, currentLocalTime, _) {
+                return ControlButtons(
+                  onSave: _showSaveModal,
+                  localElapsedTime: currentLocalTime,
+                );
+              },
             ),
           ],
         ),

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_service.dart';
+import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_local_data_source.dart';
 import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -12,7 +12,7 @@ import 'dart:developer' as developer;
 
 @injectable
 class StopwatchCubit extends Cubit<StopwatchState> {
-  final StopwatchService _service;
+  final StopwatchLocalDataSource _service;
 
   StopwatchCubit(this._service) : super(const StopwatchState());
 

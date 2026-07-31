@@ -7,11 +7,11 @@ import 'package:injectable/injectable.dart';
 import 'dart:developer' as developer;
 
 @lazySingleton
-class StopwatchService {
+class StopwatchLocalDataSource {
   static const String boxName = 'stopwatch_entries';
   late Box<StopwatchEntry> _box;
 
-  StopwatchService();
+  StopwatchLocalDataSource();
 
   bool get isInitialized => _box.isOpen;
 
@@ -20,7 +20,13 @@ class StopwatchService {
     Hive.registerAdapter(StopwatchEntryAdapter());
     try {
       _box = await Hive.openBox<StopwatchEntry>(boxName);
-    } catch (e) {
+    } catch (e, s) {
+      developer.log(
+        'Error abriendo Box de Stopwatch. Eliminando y reintentando...',
+        error: e,
+        stackTrace: s,
+        name: 'StopwatchService',
+      );
       await Hive.deleteBoxFromDisk(boxName);
       _box = await Hive.openBox<StopwatchEntry>(boxName);
     }

@@ -172,6 +172,7 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
                   controller: _titleController,
                   enabled: !isLoading,
                   maxLength: 50,
+                  textCapitalization: TextCapitalization.sentences,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(
                     labelText: '¿En qué vas a trabajar / medir?',
@@ -194,6 +195,7 @@ class _SaveActivityModalState extends State<SaveActivityModal> {
                   controller: _categoryController,
                   enabled: !isLoading,
                   maxLength: 30,
+                  textCapitalization: TextCapitalization.sentences,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(
                     labelText: 'Categoría',

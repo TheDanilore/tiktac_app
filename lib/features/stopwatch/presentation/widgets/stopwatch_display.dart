@@ -85,28 +85,30 @@ class _StopwatchDisplayState extends State<StopwatchDisplay> with SingleTickerPr
 
         return Column(
           children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    mainTime,
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      fontFamily: 'monospace',
-                      fontFeatures: const [FontFeature.tabularFigures()],
+            RepaintBoundary(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      mainTime,
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontFamily: 'monospace',
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                  Text(
-                    millisecondsStr,
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      fontFamily: 'monospace',
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                    Text(
+                      millisecondsStr,
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontFamily: 'monospace',
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),

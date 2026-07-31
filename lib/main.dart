@@ -6,7 +6,7 @@ import 'package:tiktac_app/features/settings/presentation/blocs/settings_state.d
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 
-import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_service.dart';
+import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_local_data_source.dart';
 import 'package:tiktac_app/core/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tiktac_app/core/di/injection_container.dart';
@@ -46,7 +46,7 @@ void main() async {
   // Inicializar inyección de dependencias
   initDI();
 
-  final service = sl<StopwatchService>();
+  final service = sl<StopwatchLocalDataSource>();
   await service.init();
 
   runApp(
