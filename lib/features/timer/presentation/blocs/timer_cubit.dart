@@ -7,7 +7,6 @@ import 'dart:developer' as developer;
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 import 'package:tiktac_app/core/services/hardware_service.dart';
 // No logger service needed
-import 'package:tiktac_app/core/di/service_locator.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 
 import 'package:injectable/injectable.dart';
