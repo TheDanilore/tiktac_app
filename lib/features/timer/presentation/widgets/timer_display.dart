@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
-import 'dart:ui';
 
 void _showTimePicker(BuildContext context, TimerCubit cubit) {
   Duration tempDuration = Duration(seconds: cubit.state.initialSeconds > 0 ? cubit.state.initialSeconds : 0);
@@ -29,7 +28,7 @@ void _showTimePicker(BuildContext context, TimerCubit cubit) {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -148,7 +147,7 @@ class TimerDisplay extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: ringColor.withOpacity(isFinished ? 0.3 : 0.15),
+                      color: ringColor.withValues(alpha: isFinished ? 0.3 : 0.15),
                       blurRadius: isFinished ? 60 : 30,
                       spreadRadius: isFinished ? 15 : 0,
                     ),
@@ -251,7 +250,7 @@ class TimerDisplay extends StatelessWidget {
             borderRadius: BorderRadius.circular(40),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.2 : 0.05),
+                color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -325,7 +324,7 @@ class TimerDisplay extends StatelessWidget {
                 child: state is TimerInitial ? Column(
                   children: [
                     const SizedBox(height: 24),
-                    Divider(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                    Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
                     const SizedBox(height: 16),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -355,7 +354,7 @@ class TimerDisplay extends StatelessWidget {
   Widget _buildQuickBtn(BuildContext context, ThemeData theme, int minutes, String label) {
     return ActionChip(
       label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onPressed: () => context.read<TimerCubit>().addTime(minutes),
