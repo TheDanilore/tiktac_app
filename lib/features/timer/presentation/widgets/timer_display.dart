@@ -1,9 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
-
-import 'package:flutter/cupertino.dart';
+import 'package:tiktac_app/features/timer/presentation/widgets/time_button.dart';
 
 void _showTimePicker(BuildContext context, TimerCubit cubit) {
   Duration tempDuration = Duration(seconds: cubit.state.initialSeconds > 0 ? cubit.state.initialSeconds : 0);
@@ -126,6 +126,7 @@ class TimerDisplay extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         BlocBuilder<TimerCubit, TimerState>(
+          buildWhen: (previous, current) => previous.runtimeType != current.runtimeType,
           builder: (context, state) {
             if (state is TimerInitial) {
               return Wrap(
@@ -133,10 +134,10 @@ class TimerDisplay extends StatelessWidget {
                 runSpacing: 16,
                 alignment: WrapAlignment.center,
                 children: [
-                  _TimeButton(minutes: 1, label: '+1m', onTap: () => context.read<TimerCubit>().addTime(1)),
-                  _TimeButton(minutes: 5, label: '+5m', onTap: () => context.read<TimerCubit>().addTime(5)),
-                  _TimeButton(minutes: 10, label: '+10m', onTap: () => context.read<TimerCubit>().addTime(10)),
-                  _TimeButton(minutes: 25, label: '+25m', onTap: () => context.read<TimerCubit>().addTime(25)),
+                  TimeButton(minutes: 1, label: '+1m', onTap: () => context.read<TimerCubit>().addTime(1)),
+                  TimeButton(minutes: 5, label: '+5m', onTap: () => context.read<TimerCubit>().addTime(5)),
+                  TimeButton(minutes: 10, label: '+10m', onTap: () => context.read<TimerCubit>().addTime(10)),
+                  TimeButton(minutes: 25, label: '+25m', onTap: () => context.read<TimerCubit>().addTime(25)),
                 ],
               );
             }
@@ -145,6 +146,7 @@ class TimerDisplay extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         BlocBuilder<TimerCubit, TimerState>(
+          buildWhen: (previous, current) => previous.runtimeType != current.runtimeType,
           builder: (context, state) {
             if (state is TimerFinished) {
               return ElevatedButton.icon(
@@ -184,37 +186,6 @@ class TimerDisplay extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-}
-
-class _TimeButton extends StatelessWidget {
-  final int minutes;
-  final String label;
-  final VoidCallback onTap;
-
-  const _TimeButton({required this.minutes, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.outline),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.secondary,
-          ),
-        ),
-      ),
     );
   }
 }

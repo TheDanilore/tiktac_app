@@ -1,32 +1,31 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'dart:developer' as developer;
-import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
-import 'package:tiktac_app/core/services/hardware_service.dart';
-// No logger service needed
+import 'package:injectable/injectable.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 
-import 'package:injectable/injectable.dart';
+import 'package:tiktac_app/core/services/hardware_service.dart';
+import 'package:tiktac_app/features/timer/domain/repositories/timer_repository.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
 @injectable
 class TimerCubit extends Cubit<TimerState> {
   final HardwareService _hardware;
+  final TimerRepository _repository;
 
   Timer? _ticker;
   int _targetTimeMillis = 0;
   int _remainingTimeMillis = 0;
 
-  TimerCubit(this._hardware) : super(const TimerInitial(0, 0)) {
+  TimerCubit(this._hardware, this._repository) : super(const TimerInitial(0, 0)) {
     _init();
   }
 
   Future<void> _init() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastSelectedSeconds = prefs.getInt('lastSelectedSeconds') ?? 0;
+      final lastSelectedSeconds = await _repository.getLastSelectedSeconds();
       
       if (await FlutterForegroundTask.isRunningService) {
         final mode = await FlutterForegroundTask.getData<String>(key: 'mode');
@@ -59,7 +58,7 @@ class TimerCubit extends Cubit<TimerState> {
   void addTime(int minutes) {
     if (state is TimerRunning) return;
     
-    final maxSeconds = 86399; // 23:59:59
+    const maxSeconds = 86399; // 23:59:59
     int newInitial = state.initialSeconds + (minutes * 60);
     if (newInitial > maxSeconds) newInitial = maxSeconds;
     
@@ -69,7 +68,7 @@ class TimerCubit extends Cubit<TimerState> {
   void setTime(int seconds) {
     if (state is TimerRunning) return;
     
-    final maxSeconds = 86399; // 23:59:59
+    const maxSeconds = 86399; // 23:59:59
     int newInitial = seconds > maxSeconds ? maxSeconds : seconds;
     
     _updateInitial(newInitial);
@@ -79,9 +78,7 @@ class TimerCubit extends Cubit<TimerState> {
     _targetTimeMillis = seconds * 1000;
     _remainingTimeMillis = _targetTimeMillis;
     if (seconds > 0) {
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setInt('lastSelectedSeconds', seconds);
-      });
+      _repository.saveLastSelectedSeconds(seconds);
     }
     emit(TimerInitial(seconds, seconds));
   }
@@ -116,8 +113,6 @@ class TimerCubit extends Cubit<TimerState> {
           notificationText: 'Tiempo corriendo...',
         );
       }
-      
-      // Auto PiP if enabled is handled from UI or settings
     } catch (e, stack) {
       developer.log('Failed to start foreground task', error: e, stackTrace: stack);
     }
@@ -129,14 +124,14 @@ class TimerCubit extends Cubit<TimerState> {
     
     emit(TimerRunning(initialSeconds, (_remainingTimeMillis / 1000).ceil()));
     
-    // Ticker optimizations: running every 50ms is smoother for UI if we need it, 
-    // but 1 second is enough for just seconds.
-    // We will use 50ms for smooth progress bar, but notify UI based on actual seconds remaining
-    _ticker = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+    _ticker = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final now = DateTime.now().millisecondsSinceEpoch;
       if (endTime > now) {
         _remainingTimeMillis = endTime - now;
-        emit(TimerRunning(initialSeconds, (_remainingTimeMillis / 1000).ceil()));
+        final newRemaining = (_remainingTimeMillis / 1000).ceil();
+        if (state is! TimerRunning || (state as TimerRunning).secondsRemaining != newRemaining) {
+          emit(TimerRunning(initialSeconds, newRemaining));
+        }
       } else {
         _remainingTimeMillis = 0;
         _onTimerFinished(initialSeconds);
