@@ -31,8 +31,28 @@ class StopwatchLocalDataSource {
       _box = await Hive.openBox<StopwatchEntry>(boxName);
     }
     if (_box.isEmpty) {
-      await _autoRestoreFromPublicFolder();
+      // Ya no restauramos automáticamente para evitar problemas de permisos
+      // Se mostrará un banner en la UI si hasLocalBackup() es verdadero.
     }
+  }
+
+  Future<bool> hasLocalBackup() async {
+    try {
+      Directory? directory;
+      if (Platform.isAndroid) {
+        directory = Directory('/storage/emulated/0/TikTac');
+      } else {
+        directory = await getApplicationDocumentsDirectory();
+      }
+      final file = File('${directory.path}/Historial_Backup.csv');
+      return await file.exists();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> restoreFromLocalBackup() async {
+    await _autoRestoreFromPublicFolder();
   }
 
   Future<void> _autoBackupToPublicFolder() async {
@@ -104,20 +124,20 @@ class StopwatchLocalDataSource {
       category: category,
       notes: notes,
     );
-    await _box.add(entry);
+    await _box.put(entry.id, entry); // Usar UUID explícito como llave
     _autoBackupToPublicFolder();
     return entry;
   }
 
   // Restaurar un registro eliminado
   Future<void> restoreEntry(StopwatchEntry entry) async {
-    await _box.put(entry.key ?? entry.id, entry);
+    await _box.put(entry.id, entry);
     _autoBackupToPublicFolder();
   }
 
   // Actualizar un registro existente
   Future<void> updateEntry(StopwatchEntry entry) async {
-    await _box.put(entry.key, entry);
+    await _box.put(entry.id, entry);
     _autoBackupToPublicFolder();
   }
 
@@ -298,7 +318,7 @@ class StopwatchLocalDataSource {
               category: category.isEmpty ? 'General' : category,
               notes: notes,
             );
-            await _box.add(entry);
+            await _box.put(entry.id, entry);
             importedCount++;
           }
         } catch (e, s) {

@@ -37,45 +37,38 @@ import '../../features/timer/presentation/blocs/timer_cubit.dart' as _i816;
 import '../services/hardware_service.dart' as _i616;
 
 extension GetItInjectableX on _i174.GetIt {
-  // initializes the registration of main-scope dependencies inside of GetIt
+// initializes the registration of main-scope dependencies inside of GetIt
   _i174.GetIt init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
   }) {
-    final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final gh = _i526.GetItHelper(
+      this,
+      environment,
+      environmentFilter,
+    );
     gh.lazySingleton<_i616.HardwareService>(() => _i616.HardwareService());
     gh.lazySingleton<_i316.StopwatchLocalDataSource>(
-      () => _i316.StopwatchLocalDataSource(),
-    );
-    gh.lazySingleton<_i977.StopwatchRepository>(
-      () =>
-          _i1011.StopwatchRepositoryImpl(gh<_i316.StopwatchLocalDataSource>()),
-    );
+        () => _i316.StopwatchLocalDataSource());
+    gh.lazySingleton<_i977.StopwatchRepository>(() =>
+        _i1011.StopwatchRepositoryImpl(gh<_i316.StopwatchLocalDataSource>()));
     gh.lazySingleton<_i599.SettingsLocalDataSource>(
-      () => _i599.SettingsLocalDataSourceImpl(),
-    );
+        () => _i599.SettingsLocalDataSourceImpl());
     gh.lazySingleton<_i172.TimerLocalDataSource>(
-      () => _i172.TimerLocalDataSourceImpl(),
-    );
-    gh.lazySingleton<_i674.SettingsRepository>(
-      () => _i955.SettingsRepositoryImpl(gh<_i599.SettingsLocalDataSource>()),
-    );
+        () => _i172.TimerLocalDataSourceImpl());
+    gh.lazySingleton<_i674.SettingsRepository>(() =>
+        _i955.SettingsRepositoryImpl(gh<_i599.SettingsLocalDataSource>()));
     gh.factory<_i707.StopwatchCubit>(
-      () => _i707.StopwatchCubit(gh<_i977.StopwatchRepository>()),
-    );
+        () => _i707.StopwatchCubit(gh<_i977.StopwatchRepository>()));
     gh.lazySingleton<_i573.SettingsCubit>(
-      () => _i573.SettingsCubit(gh<_i674.SettingsRepository>()),
-    );
+        () => _i573.SettingsCubit(gh<_i674.SettingsRepository>()));
     gh.lazySingleton<_i835.TimerRepository>(
-      () => _i104.TimerRepositoryImpl(gh<_i172.TimerLocalDataSource>()),
-    );
-    gh.factory<_i816.TimerCubit>(
-      () => _i816.TimerCubit(
-        gh<_i616.HardwareService>(),
-        gh<_i835.TimerRepository>(),
-        gh<_i977.StopwatchRepository>(),
-      ),
-    );
+        () => _i104.TimerRepositoryImpl(gh<_i172.TimerLocalDataSource>()));
+    gh.factory<_i816.TimerCubit>(() => _i816.TimerCubit(
+          gh<_i616.HardwareService>(),
+          gh<_i835.TimerRepository>(),
+          gh<_i707.StopwatchCubit>(),
+        ));
     return this;
   }
 }

@@ -48,8 +48,9 @@ class _HomeScreenState extends State<HomeScreen>
       if (await Permission.manageExternalStorage.isDenied ||
           await Permission.storage.isDenied) {
         if (!mounted ||
-            WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed)
+            WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
           return;
+        }
         settingsCubit.setHasShownStoragePrompt(true);
         await showDialog(
           context: context,
@@ -90,8 +91,9 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (await Permission.notification.isDenied) {
       if (!mounted ||
-          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed)
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
         return;
+      }
       settingsCubit.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,

@@ -28,4 +28,6 @@ abstract class StopwatchRepository {
   List<String> getCategories();
   String exportAsCSV();
   Future<int> importFromCSV(String csvData);
+  Future<bool> hasLocalBackup();
+  Future<void> restoreFromLocalBackup();
 }

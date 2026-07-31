@@ -84,4 +84,11 @@ class StopwatchRepositoryImpl implements StopwatchRepository {
   @override
   Future<int> importFromCSV(String csvData) =>
       _localDataSource.importFromCSV(csvData);
+
+  @override
+  Future<bool> hasLocalBackup() => _localDataSource.hasLocalBackup();
+
+  @override
+  Future<void> restoreFromLocalBackup() =>
+      _localDataSource.restoreFromLocalBackup();
 }

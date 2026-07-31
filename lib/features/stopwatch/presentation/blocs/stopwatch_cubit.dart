@@ -311,6 +311,19 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     return buffer.toString();
   }
 
+  Future<bool> hasLocalBackup() => _repository.hasLocalBackup();
+
+  Future<void> restoreFromLocalBackup() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _repository.restoreFromLocalBackup();
+      loadEntries();
+    } catch (e, s) {
+      developer.log('Error restoring from local backup', error: e, stackTrace: s);
+      emit(state.copyWith(errorMessage: 'No se pudo restaurar el backup local.', isLoading: false));
+    }
+  }
+
   Future<int> importCSVData(String csvString) async {
     int importedCount = 0;
     try {

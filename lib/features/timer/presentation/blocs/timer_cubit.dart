@@ -1,14 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:injectable/injectable.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiktac_app/core/services/hardware_service.dart';
 import 'package:tiktac_app/core/services/foreground_task_handler.dart';
-import 'package:tiktac_app/features/stopwatch/domain/repositories/stopwatch_repository.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/timer/domain/repositories/timer_repository.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
@@ -16,13 +17,13 @@ import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 class TimerCubit extends Cubit<TimerState> {
   final HardwareService _hardware;
   final TimerRepository _repository;
-  final StopwatchRepository _stopwatchRepository;
+  final StopwatchCubit _stopwatchCubit;
 
   Timer? _ticker;
   int _targetTimeMillis = 0;
   int _remainingTimeMillis = 0;
 
-  TimerCubit(this._hardware, this._repository, this._stopwatchRepository)
+  TimerCubit(this._hardware, this._repository, this._stopwatchCubit)
     : super(const TimerInitial(0, 0)) {
     _init();
   }
@@ -208,12 +209,24 @@ class TimerCubit extends Cubit<TimerState> {
     SimplePip().setAutoPipMode(autoEnter: false);
 
     try {
-      await _stopwatchRepository.saveEntry(
+      await _stopwatchCubit.saveActivity(
         title: 'Temporizador',
-        duration: initialSeconds * 1000,
         category: 'General',
         notes: '',
+        finalElapsedTime: initialSeconds * 1000,
       );
+
+      // Limpiar las pending_sessions para que StopwatchCubit.init() no duplique
+      final prefs = await SharedPreferences.getInstance();
+      final pendingSessions = prefs.getStringList('pending_sessions') ?? [];
+      if (pendingSessions.isNotEmpty) {
+        // En un caso ideal, filtraríamos. Como el timer acaba de terminar, borramos todas las del timer
+        final updatedSessions = pendingSessions.where((sessionStr) {
+          final data = jsonDecode(sessionStr);
+          return data['isTimer'] == false;
+        }).toList();
+        await prefs.setStringList('pending_sessions', updatedSessions);
+      }
     } catch (e, s) {
       developer.log(
         'Error al guardar historial del temporizador',

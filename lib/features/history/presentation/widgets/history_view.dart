@@ -414,6 +414,71 @@ class _HistoryViewState extends State<HistoryView> {
                     ),
                   ),
                 )
+              else if (state.entries.isEmpty && !isSearching)
+                SliverFillRemaining(
+                  child: Center(
+                    child: FutureBuilder<bool>(
+                      future: cubit.hasLocalBackup(),
+                      builder: (context, snapshot) {
+                        final hasBackup = snapshot.data ?? false;
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (hasBackup) ...[
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.cloud_download, size: 48, color: theme.colorScheme.primary),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Copia local encontrada',
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Hemos encontrado un historial previo en tu dispositivo. ¿Deseas restaurarlo?',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: theme.colorScheme.onPrimaryContainer),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    FilledButton(
+                                      onPressed: () {
+                                        cubit.restoreFromLocalBackup();
+                                      },
+                                      child: const Text('Restaurar Historial'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                            ],
+                            Icon(
+                              Icons.history_rounded,
+                              size: 64,
+                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No hay actividades aún',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                )
               else if (displayList.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
