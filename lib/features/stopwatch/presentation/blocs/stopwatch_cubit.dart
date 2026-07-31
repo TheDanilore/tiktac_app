@@ -88,11 +88,20 @@ class StopwatchCubit extends Cubit<StopwatchState> {
     try {
       final entries = _repository.getAll();
       emit(
-        state.copyWith(entries: entries, filterQuery: '', filteredEntries: []),
+        state.copyWith(
+          entries: entries,
+          filterQuery: '',
+          filteredEntries: [],
+          isLoading: false,
+          clearErrorMessage: true,
+        ),
       );
     } catch (e, s) {
       developer.log('Error loading entries', error: e, stackTrace: s);
-      emit(state.copyWith(errorMessage: 'No se pudieron cargar las sesiones.'));
+      emit(state.copyWith(
+        errorMessage: 'No se pudieron cargar las sesiones.',
+        isLoading: false,
+      ));
     }
   }
 
@@ -156,7 +165,7 @@ class StopwatchCubit extends Cubit<StopwatchState> {
         state.copyWith(
           status: StopwatchStatus.paused,
           elapsedTime: newElapsed,
-          startMillis: null,
+          clearStartMillis: true,
         ),
       );
 
@@ -389,6 +398,6 @@ class StopwatchCubit extends Cubit<StopwatchState> {
   }
 
   void clearError() {
-    emit(state.copyWith(errorMessage: null));
+    emit(state.copyWith(clearErrorMessage: true));
   }
 }

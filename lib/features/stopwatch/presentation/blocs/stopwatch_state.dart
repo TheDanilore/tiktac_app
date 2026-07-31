@@ -36,8 +36,10 @@ class StopwatchState extends Equatable {
     List<StopwatchEntry>? filteredEntries,
     String? filterQuery,
     String? errorMessage,
+    bool clearErrorMessage = false,
     bool? isLoading,
     int? startMillis,
+    bool clearStartMillis = false,
   }) {
     return StopwatchState(
       status: status ?? this.status,
@@ -45,9 +47,9 @@ class StopwatchState extends Equatable {
       entries: entries ?? this.entries,
       filteredEntries: filteredEntries ?? this.filteredEntries,
       filterQuery: filterQuery ?? this.filterQuery,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
       isLoading: isLoading ?? this.isLoading,
-      startMillis: startMillis ?? this.startMillis,
+      startMillis: clearStartMillis ? null : (startMillis ?? this.startMillis),
     );
   }
 
