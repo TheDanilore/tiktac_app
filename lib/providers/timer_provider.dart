@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:tiktac_app/services/foreground_task_handler.dart';
 import 'package:tiktac_app/providers/settings_provider.dart';
 import 'package:tiktac_app/providers/stopwatch_provider.dart';
@@ -149,9 +151,14 @@ class TimerProvider extends ChangeNotifier {
     final stopwatchProvider = Provider.of<StopwatchProvider>(context, listen: false);
 
     if (settings.isVibrationEnabled) {
-      final hasVibrator = await Vibration.hasVibrator();
-      if (hasVibrator == true) {
-        Vibration.vibrate(pattern: [500, 1000, 500, 2000, 500, 1000]);
+      if (!kIsWeb) {
+        Vibration.vibrate(duration: 50, amplitude: 128);
+      }
+    }
+
+    if (settings.isSoundEnabled) {
+      if (!kIsWeb) {
+        FlutterRingtonePlayer().playNotification();
       }
     }
     

@@ -66,6 +66,13 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
+                      title: const Text('Sonido'),
+                      subtitle: const Text('Reproducir alarma al finalizar el temporizador'),
+                      value: settings.isSoundEnabled,
+                      onChanged: (val) => settings.setSoundEnabled(val),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
                       title: const Text('Modo Encogido (PiP)'),
                       subtitle: const Text('Mantener tiempo en pantalla al minimizar la app'),
                       value: settings.isPipEnabled,

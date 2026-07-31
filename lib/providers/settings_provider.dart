@@ -9,10 +9,12 @@ class SettingsProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   bool _isPipEnabled = true;
   bool _isVibrationEnabled = true;
+  bool _isSoundEnabled = true;
 
   ThemeMode get themeMode => _themeMode;
   bool get isPipEnabled => _isPipEnabled;
   bool get isVibrationEnabled => _isVibrationEnabled;
+  bool get isSoundEnabled => _isSoundEnabled;
 
   Future<void> init() async {
     _box = await Hive.openBox(_boxName);
@@ -24,6 +26,7 @@ class SettingsProvider extends ChangeNotifier {
     // Load other settings
     _isPipEnabled = _box.get('isPipEnabled', defaultValue: true);
     _isVibrationEnabled = _box.get('isVibrationEnabled', defaultValue: true);
+    _isSoundEnabled = _box.get('isSoundEnabled', defaultValue: true);
     
     notifyListeners();
   }
@@ -46,6 +49,13 @@ class SettingsProvider extends ChangeNotifier {
     if (_isVibrationEnabled == enabled) return;
     _isVibrationEnabled = enabled;
     _box.put('isVibrationEnabled', enabled);
+    notifyListeners();
+  }
+
+  void setSoundEnabled(bool enabled) {
+    if (_isSoundEnabled == enabled) return;
+    _isSoundEnabled = enabled;
+    _box.put('isSoundEnabled', enabled);
     notifyListeners();
   }
 }

@@ -12,6 +12,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:simple_pip_mode/pip_widget.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,8 +35,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     Future.microtask(() {
       if (mounted) {
         Provider.of<TimerProvider>(context, listen: false).init(context);
+        _checkPermissions();
       }
     });
+  }
+
+  Future<void> _checkPermissions() async {
+    if (await Permission.notification.isDenied) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Permiso de Notificaciones'),
+          content: const Text(
+            'Necesitamos el permiso de notificaciones para poder mostrarte '
+            'el progreso del cronómetro y temporizador cuando la aplicación '
+            'está minimizada o en segundo plano.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Permission.notification.request();
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override

@@ -23,6 +23,7 @@ dependencies:
   simple_pip_mode: ^1.1.0
   path_provider: ^2.1.6
   flutter_foreground_task: ^10.0.0
+  flutter_ringtone_player: ^4.0.0+4
 
 dev_dependencies:
   flutter_test:
