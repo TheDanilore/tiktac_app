@@ -7,8 +7,8 @@ import 'package:screenshot/screenshot.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
-import 'package:tiktac_app/screens/widgets/edit_activity_modal.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/edit_activity_modal.dart';
 
 class HistoryView extends StatefulWidget {
   const HistoryView({super.key});

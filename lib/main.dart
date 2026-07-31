@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
-import 'package:tiktac_app/blocs/timer/timer_cubit.dart';
-import 'package:tiktac_app/providers/settings_provider.dart';
-import 'package:tiktac_app/screens/home_screen.dart';
-import 'package:tiktac_app/services/stopwatch_service.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
+import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/home/presentation/screens/home_screen.dart';
+import 'package:tiktac_app/features/stopwatch/data/datasources/stopwatch_service.dart';
 import 'package:tiktac_app/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tiktac_app/core/di/service_locator.dart';

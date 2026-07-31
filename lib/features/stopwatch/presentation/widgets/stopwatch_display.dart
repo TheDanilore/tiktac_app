@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
 
 class StopwatchDisplay extends StatelessWidget {
   const StopwatchDisplay({super.key});

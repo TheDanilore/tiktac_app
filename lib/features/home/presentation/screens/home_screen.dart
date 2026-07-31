@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tiktac_app/blocs/timer/timer_cubit.dart';
-import 'package:tiktac_app/blocs/timer/timer_state.dart';
-import 'package:tiktac_app/providers/settings_provider.dart';
-import 'package:tiktac_app/screens/settings_screen.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
+import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tiktac_app/screens/widgets/history_view.dart';
-import 'package:tiktac_app/screens/widgets/stopwatch_view.dart';
-import 'package:tiktac_app/screens/widgets/timer_view.dart';
+import 'package:tiktac_app/features/history/presentation/widgets/history_view.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/stopwatch_view.dart';
+import 'package:tiktac_app/features/timer/presentation/widgets/timer_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

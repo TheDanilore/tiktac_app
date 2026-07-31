@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tiktac_app/blocs/timer/timer_cubit.dart';
-import 'package:tiktac_app/blocs/timer/timer_state.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
 import 'package:flutter/cupertino.dart';
 

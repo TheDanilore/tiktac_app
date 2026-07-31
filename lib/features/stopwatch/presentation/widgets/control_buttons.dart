@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
 import 'package:flutter/services.dart';
 
 class ControlButtons extends StatelessWidget {

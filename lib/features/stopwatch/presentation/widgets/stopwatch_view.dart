@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tiktac_app/screens/widgets/stopwatch_display.dart';
-import 'package:tiktac_app/screens/widgets/control_buttons.dart';
-import 'package:tiktac_app/screens/widgets/save_activity_modal.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/stopwatch_display.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/control_buttons.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/save_activity_modal.dart';
 
 class StopwatchView extends StatelessWidget {
   const StopwatchView({super.key});

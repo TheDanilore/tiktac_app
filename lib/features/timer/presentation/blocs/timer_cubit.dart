@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter/foundation.dart';
-import 'package:tiktac_app/blocs/timer/timer_state.dart';
+import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 import 'package:tiktac_app/services/hardware_service.dart';
 import 'package:tiktac_app/services/logger_service.dart';
 import 'package:tiktac_app/core/di/service_locator.dart';

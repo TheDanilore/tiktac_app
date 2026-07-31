@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiktac_app/providers/stopwatch_provider.dart';
-import 'package:tiktac_app/screens/widgets/quick_presets.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/widgets/quick_presets.dart';
 
 class SaveActivityModal extends StatefulWidget {
   final VoidCallback onSaved;
