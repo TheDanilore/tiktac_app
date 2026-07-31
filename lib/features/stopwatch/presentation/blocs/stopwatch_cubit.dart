@@ -11,7 +11,7 @@ import 'package:injectable/injectable.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'dart:developer' as developer;
 
-@injectable
+@lazySingleton
 class StopwatchCubit extends Cubit<StopwatchState> {
   final StopwatchRepository _repository;
 

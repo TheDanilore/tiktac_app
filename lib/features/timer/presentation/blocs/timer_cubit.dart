@@ -13,7 +13,7 @@ import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit
 import 'package:tiktac_app/features/timer/domain/repositories/timer_repository.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 
-@injectable
+@lazySingleton
 class TimerCubit extends Cubit<TimerState> {
   final HardwareService _hardware;
   final TimerRepository _repository;

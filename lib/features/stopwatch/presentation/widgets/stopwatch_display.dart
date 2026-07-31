@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
@@ -13,15 +13,20 @@ class StopwatchDisplay extends StatefulWidget {
   State<StopwatchDisplay> createState() => _StopwatchDisplayState();
 }
 
-class _StopwatchDisplayState extends State<StopwatchDisplay>
-    with SingleTickerProviderStateMixin {
-  late Ticker _ticker;
+class _StopwatchDisplayState extends State<StopwatchDisplay> {
+  Timer? _timer;
   int _localElapsedTime = 0;
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((elapsed) {
+    _startTimerIfNeeded();
+  }
+
+  void _startTimerIfNeeded() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (!mounted) return;
       final state = context.read<StopwatchCubit>().state;
       if (state.status == StopwatchStatus.running &&
           state.startMillis != null) {
@@ -36,7 +41,7 @@ class _StopwatchDisplayState extends State<StopwatchDisplay>
 
   @override
   void dispose() {
-    _ticker.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -71,13 +76,11 @@ class _StopwatchDisplayState extends State<StopwatchDisplay>
           previous.elapsedTime != current.elapsedTime,
       listener: (context, state) {
         if (state.status == StopwatchStatus.running) {
-          if (!_ticker.isActive) {
-            _ticker.start();
+          if (_timer == null || !_timer!.isActive) {
+            _startTimerIfNeeded();
           }
         } else {
-          if (_ticker.isActive) {
-            _ticker.stop();
-          }
+          _timer?.cancel();
           setState(() {
             _localElapsedTime = state.elapsedTime;
           });
@@ -87,8 +90,8 @@ class _StopwatchDisplayState extends State<StopwatchDisplay>
         // En primer renderizado, asegurar que muestra el tiempo correcto si ya corría.
         if (state.status == StopwatchStatus.running &&
             state.startMillis != null &&
-            !_ticker.isActive) {
-          _ticker.start();
+            (_timer == null || !_timer!.isActive)) {
+          _startTimerIfNeeded();
         }
 
         final displayTime = state.status == StopwatchStatus.running

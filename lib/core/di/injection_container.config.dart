@@ -58,13 +58,13 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i172.TimerLocalDataSourceImpl());
     gh.lazySingleton<_i674.SettingsRepository>(() =>
         _i955.SettingsRepositoryImpl(gh<_i599.SettingsLocalDataSource>()));
-    gh.factory<_i707.StopwatchCubit>(
+    gh.lazySingleton<_i707.StopwatchCubit>(
         () => _i707.StopwatchCubit(gh<_i977.StopwatchRepository>()));
     gh.lazySingleton<_i573.SettingsCubit>(
         () => _i573.SettingsCubit(gh<_i674.SettingsRepository>()));
     gh.lazySingleton<_i835.TimerRepository>(
         () => _i104.TimerRepositoryImpl(gh<_i172.TimerLocalDataSource>()));
-    gh.factory<_i816.TimerCubit>(() => _i816.TimerCubit(
+    gh.lazySingleton<_i816.TimerCubit>(() => _i816.TimerCubit(
           gh<_i616.HardwareService>(),
           gh<_i835.TimerRepository>(),
           gh<_i707.StopwatchCubit>(),
