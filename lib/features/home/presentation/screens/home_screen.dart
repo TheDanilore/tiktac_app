@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
-import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
 import 'package:tiktac_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _checkPermissions() async {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final settingsCubit = context.read<SettingsCubit>();
 
     // Solicitar permisos de almacenamiento para backup en /TikTac
     if (await Permission.manageExternalStorage.isDenied) {
@@ -46,11 +45,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       await Permission.storage.request();
     }
 
-    if (settings.hasShownNotificationPrompt) return;
+    if (settingsCubit.state.hasShownNotificationPrompt) return;
 
     if (await Permission.notification.isDenied) {
       if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
-      settings.setHasShownNotificationPrompt(true);
+      settingsCubit.setHasShownNotificationPrompt(true);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(

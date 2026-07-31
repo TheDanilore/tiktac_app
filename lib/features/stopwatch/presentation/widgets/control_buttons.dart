@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +34,7 @@ class ControlButtons extends StatelessWidget {
                       if (isRunning) {
                          context.read<StopwatchCubit>().pauseTimer(exactElapsedTime: localElapsedTime);
                       } else {
-                         final isPipEnabled = context.read<SettingsProvider>().isPipEnabled;
+                         final isPipEnabled = context.read<SettingsCubit>().state.isPipEnabled;
                          context.read<StopwatchCubit>().startTimer(isPipEnabled: isPipEnabled);
                       }
                     },

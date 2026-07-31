@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiktac_app/features/home/presentation/screens/home_screen.dart';
-import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_state.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 
@@ -49,23 +49,18 @@ void main() async {
   final service = sl<StopwatchService>();
   await service.init();
 
-  final settingsProvider = SettingsProvider();
-  await settingsProvider.init();
-
   runApp(
-    MultiProvider(
+    MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => settingsProvider),
+        BlocProvider<SettingsCubit>(
+          create: (_) => sl<SettingsCubit>()..init(),
+        ),
+        BlocProvider<StopwatchCubit>(
+          create: (_) => sl<StopwatchCubit>()..init(),
+        ),
+        BlocProvider<TimerCubit>(create: (_) => sl<TimerCubit>()),
       ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider<StopwatchCubit>(
-            create: (_) => sl<StopwatchCubit>()..init(),
-          ),
-          BlocProvider<TimerCubit>(create: (_) => sl<TimerCubit>()),
-        ],
-        child: const MainApp(),
-      ),
+      child: const MainApp(),
     ),
   );
 }
@@ -75,12 +70,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) {
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      buildWhen: (previous, current) => previous.themeMode != current.themeMode,
+      builder: (context, state) {
         return MaterialApp(
           title: 'Cronómetro',
           debugShowCheckedModeBanner: false,
-          themeMode: settings.themeMode,
+          themeMode: state.themeMode,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           home: const HomeScreen(),

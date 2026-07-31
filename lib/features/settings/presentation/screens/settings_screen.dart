@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_cubit.dart';
+import 'package:tiktac_app/features/settings/presentation/blocs/settings_state.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -24,27 +25,31 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: theme.colorScheme.outline),
             ),
-            child: Selector<SettingsProvider, ThemeMode>(
-              selector: (context, settings) => settings.themeMode,
-              builder: (context, themeMode, _) {
-                final settings = Provider.of<SettingsProvider>(context, listen: false);
+            child: BlocSelector<SettingsCubit, SettingsState, ThemeMode>(
+              selector: (state) => state.themeMode,
+              builder: (context, themeMode) {
+                final cubit = context.read<SettingsCubit>();
                 return RadioGroup<ThemeMode>(
                   groupValue: themeMode,
-                  onChanged: (mode) => settings.setThemeMode(mode!),
+                  onChanged: (mode) {
+                    if (mode != null) {
+                      cubit.setThemeMode(mode);
+                    }
+                  },
                   child: Column(
-                    children: [
+                    children: const [
                       RadioListTile<ThemeMode>(
-                        title: const Text('Sistema'),
+                        title: Text('Sistema'),
                         value: ThemeMode.system,
                       ),
-                      const Divider(height: 1),
+                      Divider(height: 1),
                       RadioListTile<ThemeMode>(
-                        title: const Text('Claro'),
+                        title: Text('Claro'),
                         value: ThemeMode.light,
                       ),
-                      const Divider(height: 1),
+                      Divider(height: 1),
                       RadioListTile<ThemeMode>(
-                        title: const Text('Oscuro'),
+                        title: Text('Oscuro'),
                         value: ThemeMode.dark,
                       ),
                     ],
@@ -63,38 +68,38 @@ class SettingsScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Selector<SettingsProvider, bool>(
-                  selector: (context, settings) => settings.isVibrationEnabled,
-                  builder: (context, isVibrationEnabled, _) {
+                BlocSelector<SettingsCubit, SettingsState, bool>(
+                  selector: (state) => state.isVibrationEnabled,
+                  builder: (context, isVibrationEnabled) {
                     return SwitchListTile(
                       title: const Text('Vibración Intensa'),
                       subtitle: const Text('Al terminar el temporizador o acciones clave'),
                       value: isVibrationEnabled,
-                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setVibrationEnabled(val),
+                      onChanged: (val) => context.read<SettingsCubit>().setVibrationEnabled(val),
                     );
                   },
                 ),
                 const Divider(height: 1),
-                Selector<SettingsProvider, bool>(
-                  selector: (context, settings) => settings.isSoundEnabled,
-                  builder: (context, isSoundEnabled, _) {
+                BlocSelector<SettingsCubit, SettingsState, bool>(
+                  selector: (state) => state.isSoundEnabled,
+                  builder: (context, isSoundEnabled) {
                     return SwitchListTile(
                       title: const Text('Sonido'),
                       subtitle: const Text('Reproducir alarma al finalizar el temporizador'),
                       value: isSoundEnabled,
-                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setSoundEnabled(val),
+                      onChanged: (val) => context.read<SettingsCubit>().setSoundEnabled(val),
                     );
                   },
                 ),
                 const Divider(height: 1),
-                Selector<SettingsProvider, bool>(
-                  selector: (context, settings) => settings.isPipEnabled,
-                  builder: (context, isPipEnabled, _) {
+                BlocSelector<SettingsCubit, SettingsState, bool>(
+                  selector: (state) => state.isPipEnabled,
+                  builder: (context, isPipEnabled) {
                     return SwitchListTile(
                       title: const Text('Modo Encogido (PiP)'),
                       subtitle: const Text('Mantener tiempo en pantalla al minimizar la app'),
                       value: isPipEnabled,
-                      onChanged: (val) => Provider.of<SettingsProvider>(context, listen: false).setPipEnabled(val),
+                      onChanged: (val) => context.read<SettingsCubit>().setPipEnabled(val),
                     );
                   },
                 ),
