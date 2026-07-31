@@ -128,7 +128,7 @@ class StopwatchProvider with ChangeNotifier {
           callback: startCallback,
         );
       }
-      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (16, 9));
+      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
     } catch(e) {
       debugPrint("Error starting foreground task: $e");
     }

@@ -73,68 +73,83 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       pipBuilder: (context) {
         return Scaffold(
           backgroundColor: Colors.transparent,
-          body: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              color: Colors.black,
-              child: _tabController.index == 1
-                  ? Consumer<TimerProvider>(
-                      builder: (context, timer, _) {
-                        final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
-                        return Stack(
-                          children: [
-                            // Background shadow filling
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: progress.clamp(0.0, 1.0),
-                                child: Container(
-                                  color: Colors.white.withAlpha(64),
-                                ),
-                              ),
-                            ),
-                            // Timer text
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: FittedBox(
-                                  fit: BoxFit.contain,
-                                  child: Text(
-                                    timer.formattedTime,
-                                    style: const TextStyle(
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontFamily: 'monospace',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    )
-                  : Consumer<StopwatchProvider>(
-                      builder: (context, stopwatch, _) => Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: Text(
-                              stopwatch.formattedTime,
-                              style: const TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontFamily: 'monospace',
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1E1E2C), Color(0xFF2D2D44)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: _tabController.index == 1
+                ? Consumer<TimerProvider>(
+                    builder: (context, timer, _) {
+                      final progress = timer.initialSeconds > 0 ? timer.progress : 1.0;
+                      return Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: FractionallySizedBox(
+                              widthFactor: progress.clamp(0.0, 1.0),
+                              child: Container(
+                                color: const Color(0xFF6C63FF).withAlpha(60),
                               ),
                             ),
                           ),
-                        ),
+                          Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.hourglass_empty, color: Colors.white70, size: 20),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      timer.formattedTime,
+                                      style: const TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        fontFamily: 'monospace',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                : Consumer<StopwatchProvider>(
+                    builder: (context, stopwatch, _) => Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                stopwatch.formattedTime,
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-            ),
+                  ),
           ),
         );
       },

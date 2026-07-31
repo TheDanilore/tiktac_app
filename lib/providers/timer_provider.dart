@@ -146,7 +146,7 @@ class TimerProvider extends ChangeNotifier {
         );
       }
       
-      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (16, 9));
+      SimplePip().setAutoPipMode(autoEnter: true, aspectRatio: const (2, 1));
     } catch(e) {
       debugPrint("Error starting foreground task: $e");
     }
@@ -162,6 +162,7 @@ class TimerProvider extends ChangeNotifier {
     _isRunning = false;
     
     await FlutterForegroundTask.stopService();
+    SimplePip().setAutoPipMode(autoEnter: false);
 
     if (!context.mounted) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -198,6 +199,7 @@ class TimerProvider extends ChangeNotifier {
       FlutterRingtonePlayer().stop();
       Vibration.cancel();
     }
+    SimplePip().setAutoPipMode(autoEnter: false);
     notifyListeners();
   }
 
