@@ -321,12 +321,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Expanded(
-                        child: Consumer<StopwatchProvider>(
-                          builder: (context, provider, child) {
+                        child: Selector<StopwatchProvider, int>(
+                          selector: (context, provider) => provider.allEntries.length,
+                          builder: (context, entryCount, child) {
                             return _CustomTab(
                               icon: Icons.history,
                               text: 'Historial',
-                              badge: provider.entries.length.toString(),
+                              badge: entryCount.toString(),
                               isSelected: _tabController.index == 2,
                               onTap: () => _tabController.animateTo(2),
                             );
