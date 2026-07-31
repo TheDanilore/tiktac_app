@@ -1,13 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
 
-import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
+import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/widgets/edit_activity_modal.dart';
 
 class HistoryView extends StatefulWidget {
@@ -17,37 +19,24 @@ class HistoryView extends StatefulWidget {
   State<HistoryView> createState() => _HistoryViewState();
 }
 
-
-
 class _HistoryViewState extends State<HistoryView> {
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounceTimer;
 
   @override
   void dispose() {
     _searchController.dispose();
-    _debounceTimer?.cancel();
     super.dispose();
   }
 
-  void _onSearchChanged(String value, StopwatchProvider provider) {
-    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      provider.search(value);
-    });
-  }
-
-  Future<void> _importCSV(BuildContext context, StopwatchProvider provider) async {
-    final theme = Theme.of(context);
+  Future<void> _importCSV(BuildContext context, StopwatchCubit cubit) async {
     
-    // 1. Mostrar diálogo de información
+    
     final proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Importar Historial'),
         content: const Text(
-          'Puedes importar tu historial desde un archivo CSV o TXT generado previamente por esta aplicación.\n\n'
-          'Asegúrate de que el archivo no haya sido modificado manualmente para evitar errores de lectura.',
+          'Puedes importar tu historial desde un archivo CSV o TXT generado previamente por esta aplicación.',
         ),
         actions: [
           TextButton(
@@ -55,10 +44,6 @@ class _HistoryViewState extends State<HistoryView> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Seleccionar Archivo'),
           ),
@@ -77,41 +62,17 @@ class _HistoryViewState extends State<HistoryView> {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final contents = await file.readAsString();
-        final count = await provider.importCSVData(contents);
+        final count = await cubit.importCSVData(contents);
         
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text('$count registros importados exitosamente'),
-                ],
-              ),
-              backgroundColor: Colors.green.shade700,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            SnackBar(content: Text('$count registros importados')),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error al importar: $e')),
-              ],
-            ),
-            backgroundColor: theme.colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -119,7 +80,7 @@ class _HistoryViewState extends State<HistoryView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = context.read<StopwatchProvider>();
+    final cubit = context.read<StopwatchCubit>();
 
     return Column(
       children: [
@@ -130,101 +91,46 @@ class _HistoryViewState extends State<HistoryView> {
               Text('Historial', style: theme.textTheme.titleLarge),
               const Spacer(),
               IconButton(
-                onPressed: () => _importCSV(context, provider),
+                onPressed: () => _importCSV(context, cubit),
                 icon: const Icon(Icons.file_upload),
-                tooltip: 'Importar historial',
-                color: theme.colorScheme.primary,
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                ),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Exportar Historial'),
-                      content: const Text('¿En qué formato deseas exportar los datos?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            final text = provider.exportData(); // TXT
-                            if (text.isNotEmpty) {
-                              SharePlus.instance.share(ShareParams(
-                                text: text,
-                                subject: 'Historial de Cronómetro (TXT)',
-                              ));
-                            }
-                          },
-                          child: const Text('Texto (TXT)'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            final csv = provider.exportCSVData(); // CSV
-                            if (csv.isNotEmpty) {
-                              SharePlus.instance.share(ShareParams(
-                                text: csv,
-                                subject: 'Historial de Cronómetro (CSV)',
-                              ));
-                            }
-                          },
-                          child: const Text('CSV'),
-                        ),
-                      ],
-                    ),
-                  );
+                  final csv = cubit.exportCSVData();
+                  SharePlus.instance.share(ShareParams(text: csv, subject: 'Historial de Cronómetro'));
                 },
                 icon: const Icon(Icons.download, size: 16),
                 label: const Text('Exportar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.surface,
-                  foregroundColor: theme.colorScheme.onSurface,
-                  elevation: 0,
-                  side: BorderSide(color: theme.colorScheme.outline),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
               ),
               const SizedBox(width: 8),
-              Selector<StopwatchProvider, bool>(
-                selector: (_, p) => p.allEntries.isNotEmpty,
-                builder: (context, isNotEmpty, _) {
+              BlocBuilder<StopwatchCubit, StopwatchState>(
+                builder: (context, state) {
                   return ElevatedButton(
-                    onPressed: isNotEmpty
+                    onPressed: state.entries.isNotEmpty
                         ? () {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                backgroundColor: theme.colorScheme.surface,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                 title: const Text('Borrar todo'),
                                 content: const Text('¿Estás seguro de que quieres eliminar todo el historial?'),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: Text('Cancelar', style: TextStyle(color: theme.colorScheme.onSurface)),
+                                    child: const Text('Cancelar'),
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      provider.clearHistory();
+                                      cubit.clearHistory();
                                       Navigator.pop(context);
                                     },
-                                    child: Text('Borrar', style: TextStyle(color: theme.colorScheme.error)),
+                                    child: const Text('Borrar', style: TextStyle(color: Colors.red)),
                                   ),
                                 ],
                               ),
                             );
                           }
                         : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surface,
-                      foregroundColor: theme.colorScheme.error,
-                      elevation: 0,
-                      side: BorderSide(color: theme.colorScheme.outline),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
                     child: const Text('Borrar todo'),
                   );
                 },
@@ -232,59 +138,44 @@ class _HistoryViewState extends State<HistoryView> {
             ],
           ),
         ),
-        Selector<StopwatchProvider, bool>(
-          selector: (_, p) => p.allEntries.isNotEmpty,
-          builder: (context, isNotEmpty, _) {
-            if (isNotEmpty) {
-              return _StatsPanel(provider: provider);
+        BlocBuilder<StopwatchCubit, StopwatchState>(
+          builder: (context, state) {
+            if (state.entries.isNotEmpty) {
+              return _StatsPanel(state: state);
             }
             return const SizedBox.shrink();
           },
         ),
         Padding(
           padding: const EdgeInsets.all(16),
-          child: AnimatedBuilder(
-            animation: _searchController,
-            builder: (context, _) {
-              return TextField(
-                controller: _searchController,
-                onChanged: (value) => _onSearchChanged(value, provider),
-                decoration: InputDecoration(
-                  hintText: 'Buscar en el historial...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('', provider);
-                          },
-                        )
-                      : null,
-                ),
-              );
-            },
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) => cubit.searchEntries(value),
+            decoration: InputDecoration(
+              hintText: 'Buscar en el historial...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        cubit.searchEntries('');
+                      },
+                    )
+                  : null,
+            ),
           ),
         ),
         Expanded(
-          child: Selector<StopwatchProvider, List<dynamic>>(
-            selector: (_, p) => p.entries,
-            builder: (context, entries, _) {
-              if (entries.isEmpty) {
-                return Center(
-                  child: Text(
-                    'Aún no hay sesiones guardadas.',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                );
+          child: BlocBuilder<StopwatchCubit, StopwatchState>(
+            builder: (context, state) {
+              if (state.filteredEntries.isEmpty) {
+                return const Center(child: Text('No hay registros.'));
               }
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: entries.length,
+                itemCount: state.filteredEntries.length,
                 itemBuilder: (context, index) {
-                  final entry = entries[index];
+                  final entry = state.filteredEntries[index];
                   return _HistoryCard(entry: entry);
                 },
               );
@@ -297,7 +188,7 @@ class _HistoryViewState extends State<HistoryView> {
 }
 
 class _HistoryCard extends StatelessWidget {
-  final dynamic entry;
+  final StopwatchEntry entry;
 
   const _HistoryCard({required this.entry});
 
@@ -305,7 +196,7 @@ class _HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Dismissible(
-      key: Key(entry.key.toString()),
+      key: Key(entry.id.toString()),
       direction: DismissDirection.endToStart,
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -336,9 +227,9 @@ class _HistoryCard extends StatelessWidget {
           ),
         ) ?? false;
       },
-      onDismissed: (direction) {
-        final provider = Provider.of<StopwatchProvider>(context, listen: false);
-        provider.deleteEntry(entry.key);
+      onDismissed: (_) {
+        final cubit = context.read<StopwatchCubit>();
+        cubit.deleteEntry(entry.id);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Actividad eliminada'),
@@ -348,25 +239,18 @@ class _HistoryCard extends StatelessWidget {
               label: 'Deshacer',
               textColor: theme.colorScheme.primary,
               onPressed: () {
-                provider.restoreEntry(entry);
+                cubit.saveActivity(title: entry.title, category: entry.category, notes: entry.notes, finalElapsedTime: entry.duration);
               },
             ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: theme.colorScheme.outline),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.all(16),
@@ -413,7 +297,7 @@ class _HistoryCard extends StatelessWidget {
             ],
           ),
           trailing: Text(
-            entry.formattedDuration,
+            _formatDuration(entry.duration),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -432,7 +316,18 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  void _showOptionsBottomSheet(BuildContext context, dynamic entry, ThemeData theme) {
+  String _formatDuration(int millisecondsTotal) {
+    final hours = (millisecondsTotal ~/ 3600000).toString().padLeft(2, '0');
+    final minutes = ((millisecondsTotal ~/ 60000) % 60).toString().padLeft(2, '0');
+    final seconds = ((millisecondsTotal ~/ 1000) % 60).toString().padLeft(2, '0');
+    
+    if (millisecondsTotal >= 3600000) {
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
+  void _showOptionsBottomSheet(BuildContext context, StopwatchEntry entry, ThemeData theme) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -477,7 +372,7 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, dynamic entry) {
+  void _confirmDelete(BuildContext context, StopwatchEntry entry) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -491,8 +386,8 @@ class _HistoryCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              final provider = Provider.of<StopwatchProvider>(context, listen: false);
-              provider.deleteEntry(entry.key);
+              final cubit = context.read<StopwatchCubit>();
+              cubit.deleteEntry(entry.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Actividad eliminada'),
@@ -502,7 +397,7 @@ class _HistoryCard extends StatelessWidget {
                     label: 'Deshacer',
                     textColor: Theme.of(context).colorScheme.primary,
                     onPressed: () {
-                      provider.restoreEntry(entry);
+                      cubit.saveActivity(title: entry.title, category: entry.category, notes: entry.notes, finalElapsedTime: entry.duration);
                     },
                   ),
                 ),
@@ -515,7 +410,7 @@ class _HistoryCard extends StatelessWidget {
     );
   }
 
-  void _showShareDialog(BuildContext context, dynamic entry) {
+  void _showShareDialog(BuildContext context, StopwatchEntry entry) {
     final theme = Theme.of(context);
     final ScreenshotController screenshotController = ScreenshotController();
 
@@ -543,7 +438,7 @@ class _HistoryCard extends StatelessWidget {
                       Icon(Icons.timer, color: theme.colorScheme.primary, size: 48),
                       const SizedBox(height: 16),
                       Text(
-                        entry.formattedDuration,
+                        _formatDuration(entry.duration),
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontFamily: 'monospace',
                           fontWeight: FontWeight.bold,
@@ -608,13 +503,15 @@ class _HistoryCard extends StatelessWidget {
 }
 
 class _StatsPanel extends StatelessWidget {
-  final StopwatchProvider provider;
+  final StopwatchState state;
 
-  const _StatsPanel({required this.provider});
+  const _StatsPanel({required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final stats = provider.getStats();
+    int totalCount = state.entries.length;
+    int totalTime = state.entries.fold(0, (sum, entry) => sum + entry.duration);
+    int averageTime = totalCount > 0 ? (totalTime ~/ totalCount) : 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -631,21 +528,21 @@ class _StatsPanel extends StatelessWidget {
               Expanded(
                 child: _StatCard(
                   label: 'Sesiones',
-                  value: stats['totalCount'].toString(),
+                  value: totalCount.toString(),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
                   label: 'Tiempo total',
-                  value: _formatDuration(stats['totalTime']),
+                  value: _formatDuration(totalTime),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
                   label: 'Promedio',
-                  value: _formatDuration(stats['averageTime']),
+                  value: _formatDuration(averageTime),
                 ),
               ),
             ],

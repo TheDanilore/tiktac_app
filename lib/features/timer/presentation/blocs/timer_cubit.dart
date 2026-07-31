@@ -1,23 +1,26 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
-import 'package:tiktac_app/services/hardware_service.dart';
-import 'package:tiktac_app/services/logger_service.dart';
+import 'package:tiktac_app/core/services/hardware_service.dart';
+// No logger service needed
 import 'package:tiktac_app/core/di/service_locator.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 
+import 'package:injectable/injectable.dart';
+
+@injectable
 class TimerCubit extends Cubit<TimerState> {
-  final LoggerService _logger = getIt<LoggerService>();
-  final HardwareService _hardware = getIt<HardwareService>();
+  final HardwareService _hardware;
 
   Timer? _ticker;
   int _targetTimeMillis = 0;
   int _remainingTimeMillis = 0;
 
-  TimerCubit() : super(const TimerInitial(0, 0)) {
+  TimerCubit(this._hardware) : super(const TimerInitial(0, 0)) {
     _init();
   }
 
@@ -50,7 +53,7 @@ class TimerCubit extends Cubit<TimerState> {
       
       emit(TimerInitial(0, lastSelectedSeconds));
     } catch (e, stack) {
-      _logger.e("Error initializing TimerCubit", e, stack);
+      developer.log("Error initializing TimerCubit", error: e, stackTrace: stack);
     }
   }
 
@@ -117,7 +120,7 @@ class TimerCubit extends Cubit<TimerState> {
       
       // Auto PiP if enabled is handled from UI or settings
     } catch (e, stack) {
-      _logger.e("Error starting foreground task", e, stack);
+      developer.log('Failed to start foreground task', error: e, stackTrace: stack);
     }
   }
 
@@ -149,7 +152,7 @@ class TimerCubit extends Cubit<TimerState> {
       await FlutterForegroundTask.stopService();
       SimplePip().setAutoPipMode(autoEnter: false);
     } catch (e, stack) {
-      _logger.e("Error pausing timer", e, stack);
+      developer.log('Error pausing timer', error: e, stackTrace: stack);
     }
   }
 
@@ -163,7 +166,7 @@ class TimerCubit extends Cubit<TimerState> {
       await FlutterForegroundTask.stopService();
       SimplePip().setAutoPipMode(autoEnter: false);
     } catch (e, stack) {
-      _logger.e("Error resetting timer", e, stack);
+      developer.log("Error resetting timer", error: e, stackTrace: stack);
     }
   }
 

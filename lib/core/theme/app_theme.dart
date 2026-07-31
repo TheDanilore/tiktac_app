@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tiktac_app/theme/app_colors.dart';
+import 'package:tiktac_app/core/theme/app_colors.dart';
 
 class AppTheme {
   static const _textTheme = TextTheme(

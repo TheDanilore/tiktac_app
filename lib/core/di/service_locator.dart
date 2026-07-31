@@ -1,10 +1,12 @@
 import 'package:get_it/get_it.dart';
-import 'package:tiktac_app/services/logger_service.dart';
-import 'package:tiktac_app/services/hardware_service.dart';
+import 'package:injectable/injectable.dart';
+import 'package:tiktac_app/core/di/service_locator.config.dart';
 
 final getIt = GetIt.instance;
 
-void setupLocator() {
-  getIt.registerLazySingleton<LoggerService>(() => LoggerService());
-  getIt.registerLazySingleton<HardwareService>(() => HardwareService(getIt<LoggerService>()));
-}
+@InjectableInit(
+  initializerName: 'init',
+  preferRelativeImports: true,
+  asExtension: true,
+)
+void setupLocator() => getIt.init();

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_state.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_cubit.dart';
 import 'package:tiktac_app/features/timer/presentation/blocs/timer_state.dart';
 import 'package:tiktac_app/features/settings/presentation/providers/settings_provider.dart';
@@ -143,31 +144,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       );
                     },
                   )
-                : Consumer<StopwatchProvider>(
-                    builder: (context, stopwatch, _) => Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                stopwatch.formattedTime,
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontFamily: 'monospace',
+                : BlocBuilder<StopwatchCubit, StopwatchState>(
+                    builder: (context, stopwatchState) {
+                      final displayTime = stopwatchState.elapsedTime;
+                      final hours = (displayTime ~/ 3600000).toString().padLeft(2, '0');
+                      final minutes = ((displayTime ~/ 60000) % 60).toString().padLeft(2, '0');
+                      final seconds = ((displayTime ~/ 1000) % 60).toString().padLeft(2, '0');
+                      final formattedTime = displayTime >= 3600000 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
+                      
+                      return Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.timer_outlined, color: Colors.white70, size: 20),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  formattedTime,
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'monospace',
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
           ),
         );
@@ -323,13 +332,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Expanded(
-                        child: Selector<StopwatchProvider, int>(
-                          selector: (context, provider) => provider.allEntries.length,
-                          builder: (context, entryCount, child) {
+                        child: BlocBuilder<StopwatchCubit, StopwatchState>(
+                          builder: (context, state) {
                             return _CustomTab(
                               icon: Icons.history,
                               text: 'Historial',
-                              badge: entryCount.toString(),
+                              badge: state.entries.length.toString(),
                               isSelected: _tabController.index == 2,
                               onTap: () => _tabController.animateTo(2),
                             );

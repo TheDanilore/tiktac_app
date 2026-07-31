@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tiktac_app/features/stopwatch/presentation/providers/stopwatch_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tiktac_app/features/stopwatch/presentation/blocs/stopwatch_cubit.dart';
 import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
 import 'package:tiktac_app/features/stopwatch/presentation/widgets/quick_presets.dart';
 
@@ -57,7 +57,7 @@ class _EditActivityModalState extends State<EditActivityModal> {
   }
 
   void _save(BuildContext context) async {
-    final provider = Provider.of<StopwatchProvider>(context, listen: false);
+    final cubit = context.read<StopwatchCubit>();
     
     String title = _titleController.text.trim();
     String category = _categoryController.text.trim();
@@ -65,17 +65,11 @@ class _EditActivityModalState extends State<EditActivityModal> {
     if (title.isEmpty) title = 'Sesión sin título';
     if (category.isEmpty) category = 'General';
 
-    // Crear nueva entrada con los mismos IDs pero datos actualizados
-    final updatedEntry = StopwatchEntry(
-      id: widget.entry.id,
+    final updatedEntry = widget.entry.copyWith(
       title: title,
-      duration: widget.entry.duration,
-      createdAt: widget.entry.createdAt,
       category: category,
-      notes: widget.entry.notes,
     );
-
-    await provider.updateEntry(updatedEntry);
+    cubit.updateEntry(updatedEntry);
     
     if (context.mounted) {
       Navigator.of(context).pop();

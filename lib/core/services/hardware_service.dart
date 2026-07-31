@@ -1,12 +1,13 @@
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:vibration/vibration.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tiktac_app/services/logger_service.dart';
+import 'package:injectable/injectable.dart';
+import 'dart:developer' as developer;
 
+@lazySingleton
 class HardwareService {
-  final LoggerService _logger;
 
-  HardwareService(this._logger);
+  HardwareService();
 
   Future<void> playAlarm() async {
     try {
@@ -22,7 +23,7 @@ class HardwareService {
         Vibration.vibrate(pattern: [0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]);
       }
     } catch (e, stack) {
-      _logger.e("Error al reproducir alarma de hardware", e, stack);
+      developer.log("Error al reproducir alarma de hardware", error: e, stackTrace: stack);
     }
   }
 
@@ -31,7 +32,7 @@ class HardwareService {
       FlutterRingtonePlayer().stop();
       Vibration.cancel();
     } catch (e, stack) {
-      _logger.e("Error al detener alarma de hardware", e, stack);
+      developer.log("Error al detener alarma de hardware", error: e, stackTrace: stack);
     }
   }
 }

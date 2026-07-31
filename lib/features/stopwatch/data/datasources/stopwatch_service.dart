@@ -3,10 +3,15 @@ import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:tiktac_app/features/stopwatch/data/models/stopwatch_entry.dart';
+import 'package:injectable/injectable.dart';
+import 'dart:developer' as developer;
 
+@lazySingleton
 class StopwatchService {
   static const String boxName = 'stopwatch_entries';
   late Box<StopwatchEntry> _box;
+
+  StopwatchService();
 
   bool get isInitialized => _box.isOpen;
 
@@ -38,8 +43,8 @@ class StopwatchService {
       }
       final file = File('${directory.path}/Historial_Backup.csv');
       await file.writeAsString(csvData);
-    } catch (e) {
-      // Ignorar errores de escritura silenciosamente
+    } catch (e, s) {
+      developer.log('Fallo al exportar backup automático a directorio público', error: e, stackTrace: s);
     }
   }
 
@@ -56,16 +61,18 @@ class StopwatchService {
         final content = await file.readAsString();
         await importFromCSV(content);
       }
-    } catch (e) {
-      // Ignorar errores de escritura silenciosamente
+    } catch (e, s) {
+      developer.log('Fallo al restaurar backup automático desde directorio público', error: e, stackTrace: s);
     }
   }
 
-  // Obtener todos los registros ordenados por fecha (más recientes primero)
-  List<StopwatchEntry> getAll() {
+  // Obtener registros con paginación simulando Range de Supabase
+  List<StopwatchEntry> getAll({int limit = 20, int offset = 0}) {
     final entries = _box.values.toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return entries;
+    
+    if (offset >= entries.length) return [];
+    return entries.skip(offset).take(limit).toList();
   }
 
   // Guardar un nuevo registro
@@ -150,24 +157,28 @@ class StopwatchService {
     };
   }
 
-  // Buscar registros por título
-  List<StopwatchEntry> searchByTitle(String query) {
+  // Buscar registros por título con paginación (simulando .ilike y .range de Supabase)
+  List<StopwatchEntry> searchByTitle(String query, {int limit = 20, int offset = 0}) {
     final entries = _box.values
         .where((entry) =>
             entry.title.toLowerCase().contains(query.toLowerCase()) ||
             entry.category.toLowerCase().contains(query.toLowerCase()))
         .toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return entries;
+    
+    if (offset >= entries.length) return [];
+    return entries.skip(offset).take(limit).toList();
   }
 
-  // Obtener registros por categoría
-  List<StopwatchEntry> getByCategory(String category) {
+  // Obtener registros por categoría con paginación
+  List<StopwatchEntry> getByCategory(String category, {int limit = 20, int offset = 0}) {
     final entries = _box.values
         .where((entry) => entry.category == category)
         .toList();
     entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return entries;
+    
+    if (offset >= entries.length) return [];
+    return entries.skip(offset).take(limit).toList();
   }
 
   // Obtener todas las categorías únicas
@@ -181,7 +192,9 @@ class StopwatchService {
 
   // Exportar datos como texto
   String exportAsText() {
-    final entries = getAll();
+    // Para exportar, cargamos todo sin límite
+    final entries = _box.values.toList();
+    entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final buffer = StringBuffer();
     buffer.writeln('=== HISTORIAL DE CRONÓMETRO ===\n');
 
@@ -201,7 +214,8 @@ class StopwatchService {
 
   // Exportar datos como CSV
   String exportAsCSV() {
-    final entries = getAll();
+    final entries = _box.values.toList();
+    entries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final buffer = StringBuffer();
     buffer.writeln('Título,Categoría,Duración,Fecha,Notas');
     
@@ -261,8 +275,8 @@ class StopwatchService {
             await _box.add(entry);
             importedCount++;
           }
-        } catch (e) {
-          // Ignorar línea inválida
+        } catch (e, s) {
+          developer.log('Error importando línea CSV: $line', error: e, stackTrace: s);
         }
       }
     }
